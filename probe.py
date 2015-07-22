@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import socket, time
+import socket, time, httplib
 
-IP = '123.125.65.120'
+IP = '220.181.112.244'
 PORT = 80
 BUFFER_SIZE = 1024
 MESSAGE = 'GET /?falun HTTP/1.1\r\nHost: www.google.com\r\n\r\n'
