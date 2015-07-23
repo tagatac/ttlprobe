@@ -4,7 +4,6 @@ import socket, time, ssl
 
 IP = '220.181.112.244'
 PORT = 443
-BUFFER_SIZE = 1024
 MESSAGE = 'GET /?falun HTTP/1.1\r\nHost: www.google.com\r\n\r\n'
 
 ctx = ssl.create_default_context()
