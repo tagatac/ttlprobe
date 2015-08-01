@@ -3,4 +3,5 @@
 import scrapy
 
 class CrawlerItem(scrapy.Item):
-    url = scrapy.Field()
+    referer = scrapy.Field()
+    scripts = scrapy.Field()
