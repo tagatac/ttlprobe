@@ -11,7 +11,7 @@ class AlexaSpider(scrapy.Spider):
 		i = AlexaItem()
 		i['page'] = response.url
 		i['sites'] = list()
-		for sel in response.xpath('//li[@class="site-listing"]//a/text()'):
+		for sel in response.xpath('//p[@class="desc-paragraph"]/a/text()'):
 			i['sites'].append(sel.extract())
 		yield i
 

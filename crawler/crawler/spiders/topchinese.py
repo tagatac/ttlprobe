@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-import scrapy
+import scrapy, json
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from crawler.items import CrawlerItem
-import json
 
 class TopChinese(CrawlSpider):
 	name = 'topchinese'
@@ -11,7 +10,7 @@ class TopChinese(CrawlSpider):
 		jsondata = json.load(fp)
 	allowed_domains = list()
 	for page in jsondata:
-		allowed_domains += page['sites']
+		allowed_domains += map(lambda site: site.lower(), page['sites'])
 	start_urls = list('http://www.' + domain.lower() for domain in allowed_domains)
 	#custom_settings = {'DEPTH_LIMIT': 1}
 
