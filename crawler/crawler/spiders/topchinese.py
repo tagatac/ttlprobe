@@ -27,4 +27,4 @@ class TopChinese(CrawlSpider):
 			# http://tools.ietf.org/html/rfc3986#section-2
 			for jsfile in sel.re('http[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-._~:/?#\[\]@!$&\'()*+,;=]*\.js'):
 				i['scripts'].append(jsfile)
-			if i['scripts']: yield i
+		if i['scripts']: yield i
