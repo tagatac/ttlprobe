@@ -8,16 +8,13 @@ HOST = 'hm.baidu.com'
 FILENAME = 'h.js?4f1beaf39805550dd06b5cac412cd19b'
 PORT = 80
 MESSAGE = 'GET /' + FILENAME + ' HTTP/1.1\r\n'
-MESSAGE += 'Accept-Encoding: identity\r\n'
 MESSAGE += 'Host: ' + HOST + '\r\n'
-MESSAGE += 'Referer: http://www.7k7k.com/\r\n'
 MESSAGE += 'Connection: close\r\n'
-MESSAGE += 'User-Agent: Python-socket/2.7\r\n\r\n'
-#MESSAGE += 'Cache-Control: max-age=0\r\n'
-#MESSAGE += 'Accept */*\r\n'
-#MESSAGE += 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.125 Safari/537.36\r\n'
-#MESSAGE += 'Accept-Encoding: gzip, deflate, sdch\r\n'
-#MESSAGE += 'Accept-Language: en-US,en;q=0.8\r\n\r\n'
+MESSAGE += 'Cache-Control: max-age=0\r\n'
+MESSAGE += 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.125 Safari/537.36\r\n'
+MESSAGE += 'Referer: http://www.7k7k.com/\r\n'
+MESSAGE += 'Accept-Encoding: identity\r\n'
+MESSAGE += 'Accept-Language: en-US,en;q=0.8\r\n\r\n'
 BUFSIZE = 4096
 
 #traceroute = subprocess.check_output(['sudo', 'tcptraceroute', HOST])
@@ -40,4 +37,5 @@ for i in range(1):
 	if full_response:
 		if not os.path.isdir(HOST): os.mkdir(HOST)
 		with open(os.path.join(HOST, FILENAME), 'w') as f:
-			f.write(full_response)
+			f.write(full_response.split('\r\n')[-1])
+		print full_response.split('\r\n')

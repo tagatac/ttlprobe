@@ -1,0 +1,15 @@
+Frame 148: 237 bytes on wire (1896 bits), 237 bytes captured (1896 bits) on interface 0
+Ethernet II, Src: Apple_b9:23:56 (40:6c:8f:b9:23:56), Dst: Cisco_a9:c7:40 (d0:c7:89:a9:c7:40)
+Internet Protocol Version 4, Src: 128.59.22.20 (128.59.22.20), Dst: 220.181.7.190 (220.181.7.190)
+Transmission Control Protocol, Src Port: 51652 (51652), Dst Port: 80 (80), Seq: 1, Ack: 1, Len: 183
+Hypertext Transfer Protocol
+    GET /h.js?4f1beaf39805550dd06b5cac412cd19b HTTP/1.1\r\n
+    Accept-Encoding: identity\r\n
+    Host: hm.baidu.com\r\n
+    Referer: http://www.7k7k.com/\r\n
+    Connection: close\r\n
+    User-Agent: Python-urllib/2.7\r\n
+    \r\n
+    [Full request URI: http://hm.baidu.com/h.js?4f1beaf39805550dd06b5cac412cd19b]
+    [HTTP request 1/1]
+    [Response in frame: 214]
