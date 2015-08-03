@@ -6,8 +6,7 @@ from crawler.items import CrawlerItem
 
 class TopChinese(CrawlSpider):
 	name = 'topchinese'
-	with open('alexalist.json', 'r') as fp:
-		jsondata = json.load(fp)
+	with open('alexalist.json', 'r') as f: jsondata = json.load(f)
 	allowed_domains = list()
 	for page in jsondata:
 		allowed_domains += map(lambda site: site.lower(), page['sites'])
