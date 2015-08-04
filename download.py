@@ -81,7 +81,7 @@ def issue_requests(tls, host, message, ttl, filename):
 				break
 		if full_response:
 			path = os.path.join(STORAGE_DIR, host)
-			if not os.path.isdir(path): os.mkdirs(path)
+			if not os.path.isdir(path): os.makedirs(path)
 			with open(os.path.join(path, str(i) + '_' + filename),
 				  'w') as f:
 				f.write(full_response.split('\r\n')[-1])
