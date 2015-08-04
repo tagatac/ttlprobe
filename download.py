@@ -4,6 +4,7 @@ import socket, subprocess, ssl, os, json, sys
 BUFSIZE = 4096
 CTX = ssl.create_default_context()
 STORAGE_DIR = 'receivedfiles'
+REPEAT_COUNT = 1000
 
 class URIError(Exception):
 	"""Exception raised for a malformed URI.
@@ -43,7 +44,8 @@ def traceroute(host):
 						     host])
 	return int(traceroute_output.split('\n')[-2].split()[0])
 
-def gen_message(host, request):
+# Construct the HTTP GET request string.
+def gen_message(host, request, referer):
 	message = 'GET /' + request + ' HTTP/1.1\r\n'
 	message += 'Host: ' + host + '\r\n'
 	message += 'Connection: close\r\n'
@@ -51,13 +53,15 @@ def gen_message(host, request):
 	message += 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4)'
 	message += ' AppleWebKit/537.36 (KHTML, like Gecko) '
 	message += 'Chrome/44.0.2403.125 Safari/537.36\r\n'
-	message += 'Referer: http://www.7k7k.com/\r\n'
+	message += 'Referer: ' + referer + '\r\n'
 	message += 'Accept-Encoding: identity\r\n'
 	message += 'Accept-Language: en-US,en;q=0.8\r\n\r\n'
 	return message
 
-def issue_requests(tls, host, message, numhops, filename):
-	for i in range(1000):
+# Issue the HTTP GET request repeatedly for a given referer and script, saving
+# the file if one is received (rare)
+def issue_requests(tls, host, message, ttl, filename):
+	for i in range(REPEAT_COUNT):
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		if tls:
 			s = CTX.wrap_socket(s, server_hostname=host)
@@ -65,7 +69,7 @@ def issue_requests(tls, host, message, numhops, filename):
 		else:
 			port = 80
 		s.connect((host, port))
-		s.setsockopt(socket.SOL_IP, socket.IP_TTL, numhops-1)
+		s.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
 		s.send(message)
 		full_response = ''
 		while True:
@@ -99,8 +103,10 @@ for referer in jsondata:
 			continue
 		if host not in distance_table:
 			distance_table[host] = traceroute(host)
-		message = gen_message(host, request)
-		issue_requests(tls, host, message, distance_table[host],
-			       filename)
-	sys.exit()
-
+		ttl = distance_table[host] - 1
+		message = gen_message(host, request, referer['referer'])
+		print 'Requesting ' + script + ' ' + str(REPEAT_COUNT) \
+		      + ' times, referred by ' + referer['referer'] + \
+		      ', with TTL=' + str(ttl)
+		sys.stdout.flush()
+		issue_requests(tls, host, message, ttl, filename)
