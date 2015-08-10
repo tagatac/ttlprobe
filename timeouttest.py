@@ -114,7 +114,7 @@ for i in range(args.numfiles):
 
 download_times = dict()
 flattened_times = list()
-for f in download_files[0:1]:
+for f in download_files:
 	try:
 		tls, host, request, filename = parseURI(f)
 	except URIError as e:
