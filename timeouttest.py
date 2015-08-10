@@ -6,6 +6,7 @@ REPEAT_COUNT = 3
 FILE_LIST = 'jsfiles.json'
 BUFSIZE = 4096
 STORAGE_DIR = 'timeouttestfiles'
+RESULTS_FILE = 'timeouttest.json'
 TTL = 64
 CTX = ssl.create_default_context()
 
@@ -80,12 +81,11 @@ def issue_requests(tls, host, message, ttl, filename):
 				break
 		times.append(time.time() - time_before)
 		if full_response:
-			print('Received ' + filename + '!')
 			path = os.path.join(args.dir, host)
 			if not os.path.isdir(path): os.makedirs(path)
 			with open(os.path.join(path, str(i) + '_' + filename),
-				  'w') as f:
-				f.write(full_response.split('\r\n')[-1])
+				  'wb') as f:
+				f.write(full_response.split(b'\r\n')[-1])
 	return times
 
 parser = argparse.ArgumentParser(description='Test the time required to download each of several files.')
@@ -97,7 +97,7 @@ parser.add_argument('-d', '--dir', default=STORAGE_DIR, type=str, help='the path
 args = parser.parse_args()
 
 distance_table = dict() #number of hops to each host
-with open('jsfiles.json') as f: jsondata = json.load(f)
+with open('jsfiles.json') as infile: jsondata = json.load(infile)
 files = list()
 for referer in jsondata:
 	for f in referer['scripts']:
@@ -114,7 +114,7 @@ for i in range(args.numfiles):
 
 download_times = dict()
 flattened_times = list()
-for f in download_files:
+for f in download_files[0:1]:
 	try:
 		tls, host, request, filename = parseURI(f)
 	except URIError as e:
@@ -135,7 +135,9 @@ for f in download_files:
 	flattened_times += download_times[f]
 print('Mean:', statistics.mean(flattened_times))
 print('Median:', statistics.median(flattened_times))
-print('Mode:', statistics.mode(flattened_times))
+try: print('Mode:', statistics.mode(flattened_times))
+except statistics.StatisticsError as e: print('Mode: ', e)
 print('Standard Deviation:', statistics.stdev(flattened_times))
 print('Minimum:', min(flattened_times))
 print('Maximum:', max(flattened_times))
+with open(RESULTS_FILE, 'w') as outfile: json.dump(download_times, outfile)
