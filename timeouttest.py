@@ -67,7 +67,8 @@ def issue_requests(tls, host, message, ttl, filename):
 			port = 443
 		else:
 			port = 80
-		s.connect((host, port))
+		try: s.connect((host, port))
+		except: continue
 		s.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
 		s.send(message)
 		full_response = b''
@@ -80,6 +81,7 @@ def issue_requests(tls, host, message, ttl, filename):
 			except:
 				break
 		times.append(time.time() - time_before)
+		s.close()
 		if full_response:
 			path = os.path.join(args.dir, host)
 			if not os.path.isdir(path): os.makedirs(path)
