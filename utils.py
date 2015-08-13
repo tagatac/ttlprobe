@@ -1,5 +1,5 @@
 # utils.py - various utilities useful for the TTL probe
-import ssl, subprocess, socket, time
+import ssl, subprocess, socket, time, os
 
 BUFSIZE = 4096
 SSL_CONTEXT = ssl.create_default_context()
@@ -85,3 +85,9 @@ def issue_request(host, message, tls=False, ttl=None):
 	download_time = time.time() - time_before
 	s.close()
 	return full_response, download_time
+
+def save_file(directory, host, filename, counter, contents):
+	path = os.path.join(directory, host)
+	if not os.path.isdir(path): os.makedirs(path)
+	with open(os.path.join(path, str(counter) + '_' + filename), 'wb') as f:
+		f.write(contents)

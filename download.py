@@ -49,10 +49,7 @@ for referer in jsondata:
 		      ', with TTL=' + str(ttl))
 		sys.stdout.flush()
 		for i in range(args.repeat):
-			response, dowload_time = issue_request(host, message, tls, ttl)
-			if response:
-				path = os.path.join(args.dir, host)
-				if not os.path.isdir(path): os.makedirs(path)
-				with open(os.path.join(path, str(i) + '_' + filename),
-					  'wb') as f:
-					f.write(response.split(b'\r\n')[-1])
+			response, dowload_time = issue_request(host, message,
+							       tls, ttl)
+			if response: save_file(args.dir, host, filename, i,
+					       response.split(b'\r\n')[-1])
