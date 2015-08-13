@@ -78,7 +78,7 @@ for referer in jsondata:
 		if host not in distance_table:
 			distance_table[host] = traceroute(host)
 		result['traceroute'] = distance_table[host]
-		upperbound = distance_table[host]
+		upperbound = distance_table[host] + 3
 		lowerbound = 0
 		downloaded = False
 		while lowerbound != upperbound:
