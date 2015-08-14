@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import socket, select, argparse, os, sys, json
+import socket, select, argparse, os, sys, json, concurrent.futures, urllib.parse
 from utils import *
 
 REPEAT_COUNT = 5
@@ -17,6 +17,7 @@ def issue_request(host, message, tls=False, ttl=None):
 		port = 443
 	else:
 		port = 80
+	s.setblocking(False)
 	try: s.connect((host, port))
 	except: return None, None
 	if ttl: s.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
@@ -32,6 +33,48 @@ def issue_request(host, message, tls=False, ttl=None):
 			break
 	s.close()
 	return full_response
+
+def probe_domain(domain, script_list):
+	for script_info in script_list:
+		result = dict()
+		tls = script_info[0]
+		host = script_info[1]
+		request = script_info[2]
+		filename = script_info[3]
+		referer = script_info[4]
+		script = urllib.parse.urljoin(host, request)
+		result['script'] = script
+		result['referer'] = referer
+		message = gen_message(host, request, referer)
+		print('Probing for ' + script + ', referred by ' + referer)
+		sys.stdout.flush()
+		if host not in distance_table:
+			distance_table[host] = traceroute(host)
+		result['traceroute'] = distance_table[host]
+		upperbound = distance_table[host] + 3
+		lowerbound = 0
+		downloaded = False
+		while lowerbound != upperbound:
+			ttl = int((upperbound - lowerbound) / 2 + lowerbound)
+			downloaded_this_ttl = False
+			for i in range(args.repeat):
+				response = issue_request(host, message, tls,
+							 ttl)
+				if response:
+					save_file(args.dir, host, filename, i,
+						  response.split(b'\r\n')[-1])
+					downloaded = downloaded_this_ttl = True
+					if upperbound == ttl: upperbound -= 1
+					else: upperbound = ttl
+					break
+			if not downloaded_this_ttl:
+				if lowerbound == ttl: lowerbound += 1
+				else: lowerbound = ttl + 1
+		result['ttlrequired'] = lowerbound
+		result['downloaded'] = downloaded
+		with open(args.outfile, 'a') as f:
+			json.dump(result, f)
+			f.write(',\n')
 
 # commandline argument parser
 parser = argparse.ArgumentParser(description='Determine the smallest TTL required to download various JS files from China.')
@@ -51,6 +94,25 @@ if os.path.exists(args.outfile):
 
 # get the list of JS files
 with open('jsfiles.json') as f: jsondata = json.load(f)
+list_by_domain = dict()
+for referer in jsondata:
+	for script in referer['scripts']:
+		try:
+			tls, host, request, filename = parseURI(script)
+			if not host in list_by_domain:
+				list_by_domain[host] = list()
+			list_by_domain[host].append((tls, host, request,
+						     filename,
+						     referer['referer']))
+		except URIError as e:
+			print('The URI ' + script + ' is malformed. ' +
+			      'There should be at least 4 slash-delimited ' +
+			      'segments, but there are only ' + str(e.numsegs))
+			continue
+		except ProtocolError as e:
+			print('Protocol ' + e.prtcl +
+			      ' is not allowed. Skipping file: ' + script)
+			continue
 
 # parse the URIs, generate the request messages, and issue the requests
 distance_table = dict() #number of hops to each host
@@ -83,15 +145,12 @@ for referer in jsondata:
 		downloaded = False
 		while lowerbound != upperbound:
 			ttl = int((upperbound - lowerbound) / 2 + lowerbound)
-			print(lowerbound, upperbound, ttl)
 			downloaded_this_ttl = False
 			for i in range(args.repeat):
 				response = issue_request(host, message, tls,
 							 ttl)
 				if response:
-					save_file(os.path.join(args.dir, 'ttl' +
-							       str(ttl)),
-						  host, filename, i,
+					save_file(args.dir, host, filename, i,
 						  response.split(b'\r\n')[-1])
 					downloaded = downloaded_this_ttl = True
 					if upperbound == ttl: upperbound -= 1
