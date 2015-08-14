@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import socket, select, argparse, os, sys, json, concurrent.futures, urllib.parse
+import threading
 from utils import *
 
 REPEAT_COUNT = 5
@@ -7,6 +8,7 @@ FILE_LIST = 'jsfiles.json'
 STORAGE_DIR = 'gcprobefiles'
 RESULTS_FILE = 'gcprobe.json'
 TIMEOUT = 6.318 #seconds
+MAX_WORKERS = 512 #ThreadPool size
 
 # Issue the HTTP GET request repeatedly for a given referer, script, and ttl
 # value, recording the amount of time it takes for each
@@ -17,9 +19,9 @@ def issue_request(host, message, tls=False, ttl=None):
 		port = 443
 	else:
 		port = 80
-	s.setblocking(False)
 	try: s.connect((host, port))
-	except: return None, None
+	except: return None
+	s.setblocking(False)
 	if ttl: s.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
 	s.send(message)
 	full_response = b''
@@ -34,28 +36,34 @@ def issue_request(host, message, tls=False, ttl=None):
 	s.close()
 	return full_response
 
-def probe_domain(domain, script_list):
+# Probe one domain ('domain'), identifying the minimum TTL required in the HTTP
+# request to download each of the JS files from 'script_list', and writing the
+# results to the results file
+def probe_domain(domain, script_list, outfile_lock):
+	distance = traceroute(domain)
+	if distance == None: return
 	for script_info in script_list:
 		result = dict()
 		tls = script_info[0]
+		protocol = {True: 'https://', False: 'http://'}[tls]
 		host = script_info[1]
 		request = script_info[2]
 		filename = script_info[3]
 		referer = script_info[4]
-		script = urllib.parse.urljoin(host, request)
+		script = urllib.parse.urljoin(protocol+host, request)
 		result['script'] = script
 		result['referer'] = referer
+		result['traceroute'] = distance
 		message = gen_message(host, request, referer)
 		print('Probing for ' + script + ', referred by ' + referer)
 		sys.stdout.flush()
-		if host not in distance_table:
-			distance_table[host] = traceroute(host)
-		result['traceroute'] = distance_table[host]
-		upperbound = distance_table[host] + 3
+		upperbound = distance + 3
 		lowerbound = 0
 		downloaded = False
 		while lowerbound != upperbound:
 			ttl = int((upperbound - lowerbound) / 2 + lowerbound)
+			print("%s\tlowerbound:%d\tupperbound:%d\tttl:%d" %
+			      (script, lowerbound, upperbound, ttl))
 			downloaded_this_ttl = False
 			for i in range(args.repeat):
 				response = issue_request(host, message, tls,
@@ -72,9 +80,10 @@ def probe_domain(domain, script_list):
 				else: lowerbound = ttl + 1
 		result['ttlrequired'] = lowerbound
 		result['downloaded'] = downloaded
-		with open(args.outfile, 'a') as f:
-			json.dump(result, f)
-			f.write(',\n')
+		with outfile_lock:
+			with open(args.outfile, 'a') as f:
+				json.dump(result, f)
+				f.write(',\n')
 
 # commandline argument parser
 parser = argparse.ArgumentParser(description='Determine the smallest TTL required to download various JS files from China.')
@@ -94,16 +103,13 @@ if os.path.exists(args.outfile):
 
 # get the list of JS files
 with open('jsfiles.json') as f: jsondata = json.load(f)
+
+# parse the URIs and refactor the list of JS files by domain
 list_by_domain = dict()
 for referer in jsondata:
 	for script in referer['scripts']:
 		try:
 			tls, host, request, filename = parseURI(script)
-			if not host in list_by_domain:
-				list_by_domain[host] = list()
-			list_by_domain[host].append((tls, host, request,
-						     filename,
-						     referer['referer']))
 		except URIError as e:
 			print('The URI ' + script + ' is malformed. ' +
 			      'There should be at least 4 slash-delimited ' +
@@ -113,55 +119,18 @@ for referer in jsondata:
 			print('Protocol ' + e.prtcl +
 			      ' is not allowed. Skipping file: ' + script)
 			continue
+		if not host in list_by_domain: list_by_domain[host] = list()
+		list_by_domain[host].append((tls, host, request, filename,
+					     referer['referer']))
 
-# parse the URIs, generate the request messages, and issue the requests
-distance_table = dict() #number of hops to each host
+# probe all of the JS files in domain-specific threads (concurrently by domain,
+# serially by script)
 with open(args.outfile, 'w') as f: f.write('[')
-for referer in jsondata:
-	for script in referer['scripts']:
-		result = dict()
-		result['referer'] = referer['referer']
-		result['script'] = script
-		try:
-			tls, host, request, filename = parseURI(script)
-		except URIError as e:
-			print('The URI ' + script + ' is malformed. ' +
-			      'There should be at least 4 slash-delimited ' +
-			      'segments, but there are only ' + str(e.numsegs))
-			continue
-		except ProtocolError as e:
-			print('Protocol ' + e.prtcl +
-			      ' is not allowed. Skipping file: ' + script)
-			continue
-		message = gen_message(host, request, referer['referer'])
-		print('Probing for ' + script + ', referred by ' +
-		      referer['referer'])
-		sys.stdout.flush()
-		if host not in distance_table:
-			distance_table[host] = traceroute(host)
-		result['traceroute'] = distance_table[host]
-		upperbound = distance_table[host] + 3
-		lowerbound = 0
-		downloaded = False
-		while lowerbound != upperbound:
-			ttl = int((upperbound - lowerbound) / 2 + lowerbound)
-			downloaded_this_ttl = False
-			for i in range(args.repeat):
-				response = issue_request(host, message, tls,
-							 ttl)
-				if response:
-					save_file(args.dir, host, filename, i,
-						  response.split(b'\r\n')[-1])
-					downloaded = downloaded_this_ttl = True
-					if upperbound == ttl: upperbound -= 1
-					else: upperbound = ttl
-					break
-			if not downloaded_this_ttl:
-				if lowerbound == ttl: lowerbound += 1
-				else: lowerbound = ttl + 1
-		result['lowerbound'] = lowerbound
-		result['downloaded'] = downloaded
-		with open(args.outfile, 'a') as f:
-			json.dump(result, f)
-			f.write(',\n')
+outfile_lock = threading.Lock()
+futures = list()
+with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+	for domain in list_by_domain:
+		futures.append(executor.submit(probe_domain, domain,
+				    list_by_domain[domain], outfile_lock))
+concurrent.futures.wait(futures)
 with open(args.outfile, 'a') as f: f.write(']')
