@@ -69,8 +69,8 @@ def probe_domain(domain, script_list, outfile_lock):
 				response = issue_request(host, message, tls,
 							 ttl)
 				if response:
-					save_file(args.dir, host, filename, i,
-						  response.split(b'\r\n')[-1])
+					save_file(args.dir, host, filename,
+						  response)
 					downloaded = downloaded_this_ttl = True
 					if upperbound == ttl: upperbound -= 1
 					else: upperbound = ttl

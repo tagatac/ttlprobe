@@ -65,8 +65,7 @@ for f in download_files:
 	for i in range(args.repeat):
 		response, download_time = issue_request(host, message, tls)
 		if response:
-			save_file(args.dir, host, filename, i,
-				  response.split(b'\r\n')[-1])
+			save_file(args.dir, host, filename, response, i)
 			these_times.append(download_time)
 	all_times[f] = these_times
 	print(f, all_times[f])

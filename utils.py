@@ -91,8 +91,9 @@ def issue_request(host, message, tls=False, ttl=None):
 	s.close()
 	return full_response, download_time
 
-def save_file(directory, host, filename, counter, contents):
+def save_file(directory, host, filename, contents, counter=None):
 	path = os.path.join(directory, host)
+	if counter: filename = str(counter) + '_' + filename
 	if not os.path.isdir(path): os.makedirs(path)
-	with open(os.path.join(path, str(counter) + '_' + filename), 'wb') as f:
+	with open(os.path.join(path, filename), 'wb') as f:
 		f.write(contents)
