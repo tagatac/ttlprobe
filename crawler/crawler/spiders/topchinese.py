@@ -4,6 +4,11 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from crawler.items import CrawlerItem
 
+# valid URI characters according to http://tools.ietf.org/html/rfc3986#section-2
+# (ignoring question marks as they can only be used in the query and fragment,
+# and single quotes as they cause more trouble than they are worth)
+URI_CHARS = '\w\-.~:/#\[\]@!$&()*+,;='
+
 class TopChinese(CrawlSpider):
 	name = 'topchinese'
 	with open('alexalist.json', 'r') as f: jsondata = json.load(f)
@@ -22,8 +27,6 @@ class TopChinese(CrawlSpider):
 		i['referer'] = response.url
 		i['scripts'] = list()
 		for sel in response.xpath('//script'):
-			# valid URI characters according to
-			# http://tools.ietf.org/html/rfc3986#section-2
-			for jsfile in sel.re('http[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-._~:/?#\[\]@!$&\'()*+,;=]*\.js'):
+			for jsfile in sel.re('https?://['+URI_CHARS+']*\.js(?:\?['+URI_CHARS+'?]*)?'):
 				i['scripts'].append(jsfile)
 		if i['scripts']: yield i
