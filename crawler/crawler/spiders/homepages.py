@@ -1,7 +1,6 @@
-# topchinese.py - Crawler to find JavaScript file URIs on the top Chinese sites.
+# homepages.py - Crawler to find JavaScript file URIs on the homepages of the
+# top Chinese sites (according to Alexa)
 import scrapy, json
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
 from crawler.items import CrawlerItem
 
 SITES_FILE = 'alexalist.json'
@@ -10,30 +9,19 @@ SITES_FILE = 'alexalist.json'
 # and single quotes as they cause more trouble than they are worth)
 URI_CHARS = '\w\-.~:/#\[\]@!$&()*+,;='
 
-class TopChinese(CrawlSpider):
-	name = 'topchinese'
+class HomepagesSpider(scrapy.Spider):
+	name = "homepages"
 	with open(SITES_FILE, 'r') as f: jsondata = json.load(f)
 	allowed_domains = list()
 	for page in jsondata:
 		allowed_domains += map(lambda site: site.lower(), page['sites'])
 	start_urls = list('http://www.' + domain.lower() for domain in allowed_domains)
-	custom_settings = {
-		# crawl in BFO
-		'DEPTH_PRIORITY': 1,
-		'SCHEDULER_DISK_QUEUE': 'scrapy.squeues.PickleFifoDiskQueue',
-		'SCHEDULER_MEMORY_QUEUE': 'scrapy.squeues.FifoMemoryQueue',
-		# use a persistent job queue on disk
-		'JOBDIR': name + 'state'
-	}
 
-	rules = (Rule(LinkExtractor(allow_domains=allowed_domains),
-				    callback='parse_item', follow=True),)
-
-	def parse_item(self, response):
+	def parse(self, response):
 		i = CrawlerItem()
-		i['referer'] = response.url
+		i['referer'] = response.url.encode('utf8')
 		i['scripts'] = list()
 		for sel in response.xpath('//script'):
 			for jsfile in sel.re('https?://['+URI_CHARS+']*\.js(?:\?['+URI_CHARS+'?]*)?'):
-				i['scripts'].append(jsfile)
+				i['scripts'].append(jsfile.encode('utf8'))
 		if i['scripts']: yield i
