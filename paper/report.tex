@@ -1,7 +1,9 @@
 \documentclass[10pt,twocolumn]{article}
 
-\usepackage{times}
-\usepackage{fullpage}
+\usepackage{times,fullpage,hyperref,graphicx}
+\renewcommand{\sectionautorefname}{\S}
+\renewcommand{\subsectionautorefname}{\S}
+\renewcommand{\subsubsectionautorefname}{\S}
 
 \begin{document}
 
@@ -27,11 +29,11 @@
 \section{Introduction}
 \input{intro}
 
-\section{Preparation for the Probe}
-\input{prep}
-
 \section{The TTL Probe}
 \input{expt}
+
+\section{Preparation for the GC Probe}
+\input{prep}
 
 \section{Results}
 \input{rslts}
@@ -42,7 +44,7 @@
 \section{Conclusion}
 \input{concln}
 
-%{\footnotesize \bibliographystyle{acm}
-%\bibliography{refs}}
+{\footnotesize \bibliographystyle{acm}
+\bibliography{refs}}
 
 \end{document}

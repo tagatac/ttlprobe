@@ -3,9 +3,9 @@ SECTIONS = report abstr intro prep expt rslts future concln
 FIGURES = 
 
 $(date)TimeRandomization.pdf : $(SECTIONS:=.tex) $(addprefix figures/, $(FIGURES:=.png)) refs.bib
-	#pdflatex -draftmode -jobname $(date)TTLProbe report.tex
-	#bibtex $(date)TTLProbe
-	#pdflatex -draftmode -jobname $(date)TTLProbe report.tex
+	pdflatex -draftmode -jobname $(date)TTLProbe report.tex
+	bibtex $(date)TTLProbe
+	pdflatex -draftmode -jobname $(date)TTLProbe report.tex
 	pdflatex -jobname $(date)TTLProbe report.tex
 
 .PHONY : clean
