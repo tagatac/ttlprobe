@@ -8,7 +8,7 @@ FILE_LIST = 'jsfiles.json'
 STORAGE_DIR = 'gcprobefiles'
 SUSPICIOUS_DIR = 'suspicious'
 RESULTS_FILE = 'gcprobe.json'
-TIMEOUT = 6.318 #seconds
+TIMEOUT = 3 #seconds
 MAX_WORKERS = 512 #ThreadPool size
 
 # Issue the HTTP GET request repeatedly for a given referer, script, and ttl
