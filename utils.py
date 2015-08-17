@@ -42,10 +42,14 @@ def parseURI(URI):
 
 # Perform a TCP traceroute to the host, and return the number of hops required.
 def traceroute(host):
+	port = 80
+	if ':' in host:
+		split_host = host.split(':')
+		if len(split_host) > 1: host, port = split_host[0], split_host[1]
 	try:
 		traceroute_output = subprocess.check_output(['sudo',
 							     'tcptraceroute',
-							     host])
+							     host, port])
 	except subprocess.CalledProcessError as e:
 		print(e, '\nUnable to perform traceroute on', host)
 		return None

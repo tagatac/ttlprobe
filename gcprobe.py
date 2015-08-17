@@ -123,7 +123,7 @@ if os.path.exists(args.outfile):
 	sys.exit()
 
 # get the list of JS files
-with open('jsfiles.json') as f: jsondata = json.load(f)
+with open(args.filelist) as f: jsondata = json.load(f)
 
 # parse the URIs and refactor the list of JS files by domain
 list_by_domain = dict()
