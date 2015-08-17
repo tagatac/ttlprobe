@@ -1,5 +1,5 @@
 date = $(shell date '+%Y%m%d')
-SECTIONS = report abstr intro prep expt rslts future concln
+SECTIONS = report abstr intro prep gfwprobe gcprobe rslts future concln
 FIGURES = 
 
 $(date)TimeRandomization.pdf : $(SECTIONS:=.tex) $(addprefix figures/, $(FIGURES:=.png)) refs.bib

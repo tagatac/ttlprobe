@@ -1,0 +1,8 @@
+\subsection{GitHub DDoS}
+This experiment looked for GC packets as were observed during the DDoS on GitHub.
+The observation specifically was a modified JavaScript file upon request for \texttt{hm.baidu.com/h.js}, an analytics tracking script similar to that used by Google Analytics.
+The original can be found here: \url{https://github.com/tagatac/ttlprobe/blob/prelim/h.js}.
+According to \mbox{NETRESEC}~\cite{Hjelmvik2015}, the modified file contains some obfuscated code that sends requests to GitHub in a 2-second loop.
+Marczak et al. calculated that the substitution is made 1.75\% of the time, as long as your IP address is not ignored by the GC altogether, which happened to one of the machines they used for probing~\cite{Marczak2015}.
+I ran a Python script (\url{https://github.com/tagatac/ttlprobe/blob/prelim/falunjs.py}) to download the analytics script for \texttt{7k7k.com} 1000 times.
+MD5 hashes of every file match that of the unmodified JavaScript.

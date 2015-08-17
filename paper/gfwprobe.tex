@@ -1,6 +1,6 @@
-\subsection{Probing for the Great Firewall}
 Before probing for the GC, I first verified that I was able to reproduce the results of Marczak et al.~\cite{Marczak2015} with respect to the GFW.
-\subsubsection{Baseline}\label{gfwbaseline}
+I then verified that the GFW does not do the same keyword filtering on SSL or TLS traffic.
+\subsection{Baseline}\label{gfwbaseline}
 This experiment sent the message\\
 \texttt{
 	\-\ \ \ \ GET /?test HTTP/1.1\textbackslash{}r\textbackslash{}n\\
@@ -29,10 +29,11 @@ All of the requests prompted \texttt{Time-to-live exceeded} messages from interm
 The full packet capture can be found here: \url{https://github.com/tagatac/ttlprobe/blob/prelim/test-scripted.pcapng}.
 The one spurious \texttt{[RST]} packet (packet 87) sent from my computer to \texttt{123.125.65.120} is a closing connection from a previous run of the same experiment.
 You can see this from the port number used (55785), which is out of sequence with those from this experiment (55805--55831).
-\subsubsection{GFW Location}\label{gfwlocation}
+\subsection{GFW Location}\label{gfwlocation}
 This experiment shows that the GFW is between 17 and 18 hops from my desktop along the path to \texttt{123.125.65.120}.
 An identical experiment to Experiment 1 was performed, only substituting \texttt{falun} for \texttt{test} in the HTTP \texttt{GET} requests.
-The results are the same as in \autoref{gfwbaseline} for TTL values 1--17.  For each TTL\textgreater=18, I received an \texttt{[RST]} packet and three \texttt{[RST, ACK]} packets apparently from \texttt{123.125.65.120} (but actually from GFW).
+The results are the same as in \autoref{gfwbaseline} for TTL values 1--17.
+For each TTL\textgreater=18, I received an \texttt{[RST]} packet and three \texttt{[RST, ACK]} packets apparently from \texttt{123.125.65.120} (but actually from GFW).
 \texttt{[RST]} packets sent by the GFW to both endpoints (my desktop and the server and \texttt{123.125.65.120}) cause both to close the TCP connection.
 The packet capture can be found here: \url{https://github.com/tagatac/ttlprobe/blob/prelim/falun-scripted.pcapng}.
 The script used for both the experiments in \autoref{gfwbaseline} and \autoref{gfwlocation} can be found here: \url{https://github.com/tagatac/ttlprobe/blob/prelim/test.py}.
@@ -42,12 +43,32 @@ Figure \ref{fig_gfwfalun} shows the request with TTL=18 prompting the first \tex
 	\caption{The GFW responds to the keywords \texttt{www.google.com/?falun} with several \texttt{[RST]} packets as soon as the request is sent 18 hops along the path to a Baidu server in Beijing.}
 	\label{fig_gfwfalun}
 \end{figure*}
-\subsection{Probing for the Great Cannon}
-\subsubsection{GitHub DDoS}
-This experiment looked for GC packets as were observed during the DDoS on GitHub.
-The observation specifically was a modified JavaScript file upon request for \texttt{hm.baidu.com/h.js}, an analytics tracking script similar to that used by Google Analytics.
-The original can be found here: \url{https://github.com/tagatac/ttlprobe/blob/prelim/h.js}.
-According to \mbox{NETRESEC}~\cite{Hjelmvik2015}, the modified file contains some obfuscated code that sends requests to GitHub in a 2-second loop.
-Marczak et al. calculated that the substitution is made 1.75\% of the time, as long as your IP address is not ignored by the GC altogether, which happened to one of the machines they used for probing~\cite{Marczak2015}.
-I ran a Python script (\url{https://github.com/tagatac/ttlprobe/blob/prelim/falunjs.py}) to download the analytics script for \texttt{7k7k.com} 1000 times.
-MD5 hashes of every file match that of the unmodified JavaScript.
+\subsection{Probing for Keyword Filtering On Encrypted Traffic}
+In a similar way to \autoref{gfwlocation}, I probed for keyword filtering on HTTP requests sent to servers in China, but this time with encrypted TCP packets.
+Note that many Chinese websites maintain servers in Hong Kong, or elsewhere outside of mainland China, so that DNS relays in the U.S. resolve those domains to servers that are not behind the GFW.
+In order to identify a Baidu server in China, I instead used a Chinese DNS relay \texttt{115.28.245.152} located in Hangzhou, which I obtained from a site which lists public DNS servers~\cite{PublicDNS}.
+Using this relay resolves \texttt{www.baidu.com} to \texttt{CNAME www.a.shifen.com} and IPv4 addresses \texttt{220.181.112.244} and \texttt{220.181.111.188}, both of which are located in Beijing according to geolocation databases~\cite{IPLookup244,IPLookup188}.
+
+A \texttt{tcptraceroute} identifies the first IP address \texttt{220.181.112.244} as being 22 hops away from my desktop.
+A repeat of the experiment in \autoref{gfwlocation} (with unencrypted TCP packets) to this IP address shows that, as expected, requests for \texttt{www.google.com/?falun} sent with TTL values of at least 16 are detected by the GFW, and \texttt{[RST]} packets are received.
+The packet capture can be found here: \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/pcaps/falun-220.pcapng}.
+
+Then three more probes were performed.
+These probes sent the following requests with the specified encryption, and TTL values ranging from 0--24:
+\begin{enumerate}
+	\item \texttt{www.google.com/?test} sent over TLS1.2
+	\item \texttt{www.google.com/?falun} sent over TLS1.2
+	\item \texttt{www.google.com/?falun} sent over SSL3
+\end{enumerate}
+Not one of these requests generated an \texttt{[RST]} packet from the GFW.
+The script used to these probes can be found here: \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/probe.py}.
+It uses the standard Python libraries \texttt{socket} and \texttt{ssl}, wrapping a socket connection with the appropriate (TLS1.2 or SSL3) \texttt{ssl.Context}.
+The packet captures for these probes can be found at the following respective URLs:
+\begin{enumerate}
+	\item \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/pcaps/test-220-tls.pcapng}
+	\item \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/pcaps/falun-220-tls.pcapng}
+	\item \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/pcaps/falun-220-ssl.pcapng}
+\end{enumerate}
+The certificate offered by the server at texttt{220.181.112.244} can be found here: \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/baiducert.pem}.
+
+These results support the hypothesis that the GFW does \textit{not} perform keyword filtering on encrypted traffic.
