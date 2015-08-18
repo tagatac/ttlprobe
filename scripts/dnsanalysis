@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import sys, json, subprocess
 
-SCRAPYCOMMAND = "print(', '.join([response.xpath('//tr').re('<tr><th>City:</th><td>([\w ]*)</td></tr>')[0], response.xpath('//tr').re('<tr><th>State/Region:</th><td>([\w ]*)</td></tr>')[0], response.xpath('//tr').re('<tr><th>Country:</th><td>([\w ]*) <img')[0]]))"
+SCRAPYCOMMAND = "print(', '.join([response.xpath('//tr').re('<tr><th>City:</th><td>([\w ]*)</td></tr>')[0], response.xpath('//tr').re('<tr><th>Country:</th><td>([\w ]*) <img')[0]]))"
 
 def get_location(address):
 	response = subprocess.check_output(['scrapy', 'shell', '-c',
 					    SCRAPYCOMMAND,
-					    'http://whatismyipaddress.com/ip/'+server],
+					    'http://whatismyipaddress.com/ip/'+address],
 					   stderr=subprocess.DEVNULL)
 	return response.decode('utf8').split('\n')[0]
 
