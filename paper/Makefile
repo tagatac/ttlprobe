@@ -1,8 +1,9 @@
 date = $(shell date '+%Y%m%d')
 SECTIONS = report abstr intro prep gfwprobe gcprobe rslts future concln
-FIGURES = 
+JPGS = gfwfalun gfwtest
+PNGS = gfwbaiduip
 
-$(date)TimeRandomization.pdf : $(SECTIONS:=.tex) $(addprefix figures/, $(FIGURES:=.png)) refs.bib
+$(date)TTLProbe.pdf : $(SECTIONS:=.tex) $(addprefix figures/, $(JPGS:=.jpg)) $(addprefix figures/, $(PNGS:=.png)) refs.bib
 	pdflatex -draftmode -jobname $(date)TTLProbe report.tex
 	bibtex $(date)TTLProbe
 	pdflatex -draftmode -jobname $(date)TTLProbe report.tex
