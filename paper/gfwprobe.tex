@@ -11,7 +11,7 @@ This is effectively requesting \texttt{www.google.com/?test} from a server (not 
 \begin{figure}
 	\includegraphics[width=\columnwidth]{figures/gfwbaiduip}
 	\caption{
-		Details on the destination IP address used in the experiments in \autoref{gfwbaseline} and \autoref{gfwlocation}.
+		\cite{IPLookup120} Details on the destination IP address used in the experiments in \autoref{gfwbaseline} and \autoref{gfwlocation}.
 		Note the location (Beijing) and the ISP (China Unicom).
 	}
 	\label{fig_gfwbaiduip}
@@ -22,7 +22,7 @@ All of the requests prompted \texttt{Time-to-live exceeded} messages from interm
 	\includegraphics[width=\textwidth]{figures/gfwtest}
 	\caption{
 		No \texttt{[RST]} packets are sent when \texttt{www.google.com/?test} is requested from a Baidu server in Beijing.
-		\texttt{Time-to-live exceeded} messages are received for small TTL values, until an HTTP response is received after sending the request with TTL=24 (packet 249), and the request reaches the Baidu server.
+		\texttt{Time-to-live exceeded} messages are received for small TTL values, until an HTTP response is received (packet 249) after sending the request with TTL=24 (packet 245), and the request reaches the Baidu server.
 	}
 	\label{fig_gfwtest}
 \end{figure*}
@@ -43,19 +43,19 @@ Figure \ref{fig_gfwfalun} shows the request with TTL=18 prompting the first \tex
 	\caption{The GFW responds to the keywords \texttt{www.google.com/?falun} with several \texttt{[RST]} packets as soon as the request is sent 18 hops along the path to a Baidu server in Beijing.}
 	\label{fig_gfwfalun}
 \end{figure*}
-\subsection{Probing for Keyword Filtering On Encrypted Traffic}
+\subsection{Probing for Keyword Filtering On Encrypted Traffic}\label{gfwtls}
 In a similar way to \autoref{gfwlocation}, I probed for keyword filtering on HTTP requests sent to servers in China, but this time with encrypted TCP packets.
-Note that many Chinese websites maintain servers in Hong Kong, or elsewhere outside of mainland China, so that DNS relays in the U.S. resolve those domains to servers that are not behind the GFW.
-In order to identify a Baidu server in China, I instead used a Chinese DNS relay \texttt{115.28.245.152} located in Hangzhou, which I obtained from a site which lists public DNS servers~\cite{PublicDNS}.
-Using this relay resolves \texttt{www.baidu.com} to \texttt{CNAME www.a.shifen.com} and IPv4 addresses \texttt{220.181.112.244} and \texttt{220.181.111.188}, both of which are located in Beijing according to geolocation databases~\cite{IPLookup244,IPLookup188}.
+Note that many Chinese websites maintain servers in Hong Kong, or elsewhere outside of mainland China, so that DNS servers in the U.S. resolve those domains to servers that are not behind the GFW.
+In order to identify a Baidu server in China, I instead used a Chinese DNS server \texttt{115.28.245.152} located in Hangzhou, which I obtained from a site which lists public DNS servers~\cite{PublicDNS}.
+Using this server resolves \texttt{www.baidu.com} to \texttt{CNAME www.a.shifen.com} and IPv4 addresses \texttt{220.181.112.244} and \texttt{220.181.111.188}, both of which are located in Beijing according to geolocation databases~\cite{IPLookup244,IPLookup188}.
 
-A \texttt{tcptraceroute} identifies the first IP address \texttt{220.181.112.244} as being 22 hops away from my desktop.
+A \texttt{tcptraceroute}~\cite{Toren2006} identifies the first IP address \texttt{220.181.112.244} as being 22 hops away from my desktop.
 A repeat of the experiment in \autoref{gfwlocation} (with unencrypted TCP packets) to this IP address shows that, as expected, requests for \texttt{www.google.com/?falun} sent with TTL values of at least 16 are detected by the GFW, and \texttt{[RST]} packets are received.
 The packet capture can be found here: \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/pcaps/falun-220.pcapng}.
 
 Then three more probes were performed.
 These probes sent the following requests with the specified encryption, and TTL values ranging from 0--24:
-\begin{enumerate}
+\begin{enumerate}\addtolength{\itemsep}{-.35\baselineskip}
 	\item \texttt{www.google.com/?test} sent over TLS1.2
 	\item \texttt{www.google.com/?falun} sent over TLS1.2
 	\item \texttt{www.google.com/?falun} sent over SSL3
@@ -64,7 +64,7 @@ Not one of these requests generated an \texttt{[RST]} packet from the GFW.
 The script used to these probes can be found here: \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/probe.py}.
 It uses the standard Python libraries \texttt{socket} and \texttt{ssl}, wrapping a socket connection with the appropriate (TLS1.2 or SSL3) \texttt{ssl.Context}.
 The packet captures for these probes can be found at the following respective URLs:
-\begin{enumerate}
+\begin{enumerate}\addtolength{\itemsep}{-.35\baselineskip}
 	\item \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/pcaps/test-220-tls.pcapng}
 	\item \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/pcaps/falun-220-tls.pcapng}
 	\item \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/pcaps/falun-220-ssl.pcapng}

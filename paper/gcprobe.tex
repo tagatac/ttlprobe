@@ -1,8 +1,40 @@
 \subsection{GitHub DDoS}
 This experiment looked for GC packets as were observed during the DDoS on GitHub.
 The observation specifically was a modified JavaScript file upon request for \texttt{hm.baidu.com/h.js}, an analytics tracking script similar to that used by Google Analytics.
-The original can be found here: \url{https://github.com/tagatac/ttlprobe/blob/prelim/h.js}.
+The URI also has a site-specific query appended.
+For example, the analytics tracking script for the site \texttt{7k7k.com} is \texttt{http://hm.baidu.com/h.js?4f1beaf39805550dd06b5cac412cd19b}
+The unmodified script for this same site can be found here: \url{https://github.com/tagatac/ttlprobe/blob/prelim/h.js}.
 According to \mbox{NETRESEC}~\cite{Hjelmvik2015}, the modified file contains some obfuscated code that sends requests to GitHub in a 2-second loop.
 Marczak et al. calculated that the substitution is made 1.75\% of the time, as long as your IP address is not ignored by the GC altogether, which happened to one of the machines they used for probing~\cite{Marczak2015}.
 I ran a Python script (\url{https://github.com/tagatac/ttlprobe/blob/prelim/falunjs.py}) to download the analytics script for \texttt{7k7k.com} 1000 times.
 MD5 hashes of every file match that of the unmodified JavaScript.
+This provides some evidence to support the hypothesis that the GC is no longer responding to queries for \texttt{hm.baidu.com/h.js}.
+\subsection{Other JavaScript Files}\label{otherjs}
+What about other JS files?
+Is the GC responding to requests for other JS files with malicious substitutions?
+In order to answer this question, I gathered URIs for many JavaScript files from several of the most-visited sites in China.
+I then requested each of these files several times, varying the TTL value of the request until I could identify the minimum TTL value required (the minimum distance the request needed to travel along the path to the hosting server) in order for the server to send me the file.
+This experiment consisted of four main pieces:
+\begin{itemize}\addtolength{\itemsep}{-.35\baselineskip}
+	\item gathering the list of most-visited sites in China,
+	\item choosing a DNS server,
+	\item crawling those sites for JavaScript file URIs,
+	\item identifying a proper timeout to use when requesting the URIs,
+	\item estimating the distance to each domain hosting one or more of the JS files,
+	\item and identifying the minimum request TTL value required to obtain each JS file.
+\end{itemize}
+The remainder of \autoref{otherjs} discusses the implementation of these pieces in further detail.
+\subsubsection{The Most-visited Sites in China}\label{alexa}
+\texttt{Alexa.com} was chosen as the source for the list of most-visited sites in China~\cite{AlexaCN}.
+A simple web crawler constructed on top of the Scrapy web crawling framework~\cite{Scrapy} was used to scrape the list of the top 500 most-visited and most-viewed sites.
+The crawler visits each of the pages in the Alexa top sites list, and records the domain names of all 25 sites listed on each of the 20 pages, for a total of 500 domain names.
+Using the built-in Scrapy pipeline system, these domain names are written to a file in JSON format.
+This crawler took 493 milliseconds to run.
+\subsubsection{DNS Servers}
+As mentioned earlier, U.S.-based DNS servers often resolve Chinese domains (like many of those obtained by the crawler in \autoref{alexa}) to servers outside of mainland China (e.g. in Hong Kong).
+In order to maximize the likelihood of the TTL probes passing through the GC infrastructure, I preferred a Chinese DNS server that would resolve Chinese domains to servers inside mainland China.
+I visited the same list of public Chinese DNS servers used in \autoref{fgwtls}~\cite{PublicDNS} and chose the most reliable 9 out of the most recently checked 100 servers.
+To decided which was most suitable for this experiment, I analyzed each of these servers for its location, performance as measured with \texttt{namebench}~\cite{Namebench}, and the location of the server to which it resolves \texttt{www.baidu.com}.
+
+\subsubsection{JavaScript URIs}
+Using the list of domain names obtained with the crawler described in \autoref{alexa}, 
