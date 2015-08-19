@@ -10,13 +10,13 @@ $(date)TTLProbe.pdf : $(SECTIONS:=.tex) $(addprefix figures/, $(JPGS:=.jpg)) $(a
 	pdflatex -jobname $(date)TTLProbe main.tex
 
 figures/histhomepages.png : ../results/best/gcprobe.json
-	scripts/gen_plots.py $< $@
+	scripts/gen_plot.py $< $@
 
 figures/histhomepages-mod.png : ../results/best/modified.json
-	scripts/gen_plots.py $< $@
+	scripts/gen_plot.py $< $@
 
 figures/histfull.png : ../results/20150818T1418-memfailfiles/gcprobe.json
-	scripts/gen_plots.py $< $@
+	scripts/gen_plot.py $< $@
 
 
 .PHONY : clean
