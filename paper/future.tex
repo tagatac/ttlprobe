@@ -1,1 +1,22 @@
-TBD
+\subsection{Assumptions}
+This probe makes a number of assumptions.
+First, it assumes that the injection rate of the GC or other injector (assuming there is one and it is active) is high enough that testing each TTL value in the binary search for the minimum TTL value required yields a significant chance that an injection will be seen.
+Injection rates seen by Marczak et al. were about 1.75\%~\cite{Marczak2015}.
+Second, it assumes that one or more of the files for which the crawlers scraped URIs is being targeted by the GC or other injector.
+In the case of the GitHub DDoS, only a single file was seen to be targeted.
+Finally, it assumes that the IP address from which the probe is run is not being filtered.
+Marczak et al. observed that no injections were made in response to requests originating from one of four test IP addresses.
+\subsection{Next Steps}
+Further analysis is possible on the results received.
+7 hops (the maximum difference between the \texttt{tcptraceroute} result and the minimum TTL value required for download, after adjusting for the new \texttt{tcptraceroute} result for \texttt{ir.ebaystatic.com}) is still a large discrepancy.
+In addition, a demonstration of the effectiveness of this probe in the presence of mock injections is warranted (e.g. via responses from a cache that I control).
+In addition, several technical improvements can be made to the probing process:
+\begin{itemize}\addtolength{\itemsep}{-.35\baselineskip}
+	\item Traceroute failures can be handled more gracefully.
+		Additionally a better estimate for the distance of a domain's servers may be possible, perhaps using the TTL value required to download other files from that domain.
+	\item DNS lookup failures can be handled more gracefully.
+	\item The full-site crawler can be optimized for broad crawls.
+		Several suggestions are offered on the Scrapy website: \url{http://doc.scrapy.org/en/latest/topics/broad-crawls.html}
+	\item The crawlers can also do a better job at scraping JS URIs.
+		At present, all relative URIs and URIs containing single quotes are ignored.
+\end{itemize}

@@ -1,7 +1,7 @@
 date = $(shell date '+%Y%m%d')
 SECTIONS = main abstr intro prep gfwprobe gcprobe rslts future concln
 JPGS = gfwfalun gfwtest
-PNGS = gfwbaiduip histhomepages histhomepages-mod histfull
+PNGS = gfwbaiduip histhomepages histhomepages-mod histfull histfull-mod
 
 $(date)TTLProbe.pdf : $(SECTIONS:=.tex) $(addprefix figures/, $(JPGS:=.jpg)) $(addprefix figures/, $(PNGS:=.png)) refs.bib
 	pdflatex -draftmode -jobname $(date)TTLProbe main.tex
@@ -16,6 +16,9 @@ figures/histhomepages-mod.png : ../results/best/modified.json
 	scripts/gen_plot.py $< $@
 
 figures/histfull.png : ../results/20150818T1418-memfailfiles/gcprobe.json
+	scripts/gen_plot.py $< $@
+
+figures/histfull-mod.png : ../results/20150818T1418-memfailfiles/modified.json
 	scripts/gen_plot.py $< $@
 
 

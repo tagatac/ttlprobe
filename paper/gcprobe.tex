@@ -86,6 +86,7 @@ I have never seen this crawler complete.
 A first run, performed in the default depth-first order, and storing links to visit in memory, gathered 910,490 JS file URIs from 268,537 distinct pages before running out of memory and crashing after 19 hours and 1 minute.
 These files are hosted on 118 different domains.
 The domain which accounted for the largest fraction of the JS URIs was \texttt{cmsjs.eastmoney.com}, hosting 377,156 of the 0.9M URIs.
+This run also used a more basic regular expression for extracting URIs, one which ignores the queries and segments (everything after the first question mark).
 
 A second run, performed in breadth-first order, and storing link to visit on disk, has been running since 1am on August 16.
 At the time of writing this, 9pm on August 18, this second run has gathered 3,232,437 JS file URIs from 497,926 distinct pages.
@@ -118,7 +119,7 @@ The probe for each domain involves:
 	\begin{enumerate}
 		\item Set an upper bound on the minimum TTL required to download it (initially three more than the distance estimated by \texttt{tcptraceroute}).
 		\item Set a lower bound on the TTL required (initially zero).
-		\item\label{loop} Request the file five times with a TTL halfway between the lower bound and the upper bound.
+		\item\label{loop} Request the file five times with a TTL halfway between the lower bound and the upper bound, and with headers that look like the request is coming from a current version of Chrome.
 		\item If the file is received following any of the five requests, set the upper bound to be the TTL used.
 			If not, set the lower bound to be one greater than the TTL used.
 		\item\label{ttl} Repeat from \ref{loop} until the lower bound is the same as the upper bound.
@@ -129,4 +130,3 @@ The probe for each domain involves:
 			(This may be a malicious injection by an entity other than the targeted server, which has been estimated to be further away than the request should have reached.)
 	\end{enumerate}
 \end{itemize}
-Results from running this probe are discussed in \autoref{results}.
