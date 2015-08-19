@@ -16,7 +16,10 @@ plot_file = sys.argv[2]
 with open(results_file) as f: jsondata = json.load(f)
 x = list()
 for script in jsondata:
-	if script['downloaded'] == True: x.append(script['earlyby'])
+	if script['downloaded'] == True:
+		if 'earlyby' not in script:
+			script['earlyby'] = script['traceroute'] - script['ttlrequired']
+		x.append(script['earlyby'])
 
 font = {'size':16}
 mpl.rc('font', **font)

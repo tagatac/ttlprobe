@@ -76,7 +76,7 @@ After setting the system DNS servers to those identified in \autoref{dns}, this 
 The JS files are hosted across 737 domains.
 The crawler encountered 106 Scrapy exceptions, of which 60 were timeout errors, 37 were DNS errors, and 9 were no-response errors.
 3 more errors were caused by a Scrapy bug wherein an exception is raised when TLS certificates fail verification~\cite{Calderone2015}.
-\subsubsection*{Full-site Crawler}
+\subsubsection*{Full-site Crawler}\label{full-crawler}
 The second crawler performs a much broader crawl.
 It visits the homepage of each of the domains obtained from the Alexa top 500 list, like the homepages-only crawler, scraping for JS URIs in the same way with the same regular expression.
 However, this crawler also gathers all of the hyperlinks (using Scrapy's link-gathering library), and visits all of those links provided they are also within the list of top 500 domains.
