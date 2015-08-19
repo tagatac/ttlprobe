@@ -2,7 +2,7 @@
 This experiment looked for GC packets as were observed during the DDoS on GitHub.
 The observation specifically was a modified JavaScript file upon request for \texttt{hm.baidu.com/h.js}, an analytics tracking script similar to that used by Google Analytics.
 The URI also has a site-specific query appended.
-For example, the analytics tracking script for the site \texttt{7k7k.com} is \texttt{http://hm.baidu.com/h.js?4f1beaf39805550dd06b5cac412cd19b}
+For example, the analytics tracking script for the site \texttt{7k7k.com} is \texttt{http://hm.baidu.com/\allowbreak h.js?4f1beaf39805550dd06b5cac412cd19b}
 The unmodified script for this same site can be found here: \url{https://github.com/tagatac/ttlprobe/blob/prelim/h.js}.
 According to \mbox{NETRESEC}~\cite{Hjelmvik2015}, the modified file contains some obfuscated code that sends requests to GitHub in a 2-second loop.
 Marczak et al. calculated that the substitution is made 1.75\% of the time, as long as your IP address is not ignored by the GC altogether, which happened to one of the machines they used for probing~\cite{Marczak2015}.
@@ -30,11 +30,59 @@ A simple web crawler constructed on top of the Scrapy web crawling framework~\ci
 The crawler visits each of the pages in the Alexa top sites list, and records the domain names of all 25 sites listed on each of the 20 pages, for a total of 500 domain names.
 Using the built-in Scrapy pipeline system, these domain names are written to a file in JSON format.
 This crawler took 493 milliseconds to run.
-\subsubsection{DNS Servers}
+\subsubsection{DNS Servers}\label{dns}
 As mentioned earlier, U.S.-based DNS servers often resolve Chinese domains (like many of those obtained by the crawler in \autoref{alexa}) to servers outside of mainland China (e.g. in Hong Kong).
 In order to maximize the likelihood of the TTL probes passing through the GC infrastructure, I preferred a Chinese DNS server that would resolve Chinese domains to servers inside mainland China.
 I visited the same list of public Chinese DNS servers used in \autoref{fgwtls}~\cite{PublicDNS} and chose the most reliable 9 out of the most recently checked 100 servers.
-To decided which was most suitable for this experiment, I analyzed each of these servers for its location, performance as measured with \texttt{namebench}~\cite{Namebench}, and the location of the server to which it resolves \texttt{www.baidu.com}.
-
+To decide which was most suitable for this experiment, I analyzed each of these servers for its location, performance as measured with \texttt{namebench}~\cite{Namebench}, and the location of the server to which it resolves \texttt{www.baidu.com} (Table \ref{tab_dns}).
+An OpenDNS server was also analyzed for comparison.
+For all of the following experiments, the two fastest DNS servers which place \texttt{www.baidu.com} in mainland China were used (\texttt{118.194.196.109} and \texttt{114.112.79.22}).
+\begin{table}
+	\footnotesize
+	\begin{tabular}{ | p{0.7in} | p{0.4in} | p{0.4in} | p{0.4in} | p{0.4in} | }
+	\hline
+	\textbf{Server \allowbreak{}Address} & \textbf{Location} & \textbf{Mean \allowbreak{}Response Time (ms)} & \textbf{Fastest \allowbreak{}Response Time (ms)} & \textbf{Baidu \allowbreak{}Location} \\ \hline
+	\hline
+	208.67.222.222 & San Fran., US & 32.1 & 1.1 & Central District, HK \\ \hline
+	103.7.5.13 & Laohekou, China & 344.51 & 205.2 & Central District, HK \\ \hline
+	192.151.227.196 &  & 398.68 & 222.2 & Central District, HK \\ \hline
+	118.194.196.109 & Beijing, China & 559.77 & 241.5 & Beijing, China \\ \hline
+	114.112.79.22 & Beijing, China & 608.10 & 216.0 & Beijing, China \\ \hline
+	124.254.1.114 & Beijing, China & 632.41 & 217.2 & Beijing, China \\ \hline
+	61.182.80.61 & Shijia\-zhuang, China & 685.63 & 225.9 & Beijing, China \\ \hline
+	202.202.24.65 & Chong\-qing, China & 942.96 & 229.8 & Nanjing, China \\ \hline
+	112.95.147.99 & Shenzhen, China & ---\tablefootnote{replica of 192.151.227.196} & --- & Central District, HK \\ \hline
+	159.226.223.193 & Beijing, China & ---\tablefootnote{failed the namebench correctness tests} & --- & Beijing, China \\ \hline
+	\end{tabular}
+	\caption{
+		Performance and location details for several Chinese DNS servers obtained from a list of public servers~\cite{PublicDNS} (compared to one OpenDNS server), ordered by mean response time.
+		``Baidu Location'' refers to the location of the server returned by a lookup query for \texttt{www.baidu.com}.
+		The two fastest servers which place \texttt{www.baidu.com} in mainland China were \texttt{118.194.196.109} and \texttt{114.112.79.22}.
+	}
+	\label{tab_dns}
+\end{table}
 \subsubsection{JavaScript URIs}
-Using the list of domain names obtained with the crawler described in \autoref{alexa}, 
+Using the list of domain names obtained with the crawler described in \autoref{alexa}, two other crawlers were written to scrape Javascript URIs from each domain.
+The first only scrapes JS URIs from the homepage of each domain.
+The second attempts to crawl the entire site for each domain, scraping JS URIs from each page in each domain.
+\subsubsection*{Homepages-only Crawler}
+The first crawler visits each of the domains obtained from the Alexa top 500 list, and performs a regular expression search on the source of the entire homepage for JS file URIs.
+The regular expression used is \texttt{https?://[URI\_CHARS]*\textbackslash{}.js\allowbreak{}(?:\textbackslash{}?[URI\_CHARS?]*)?}, where \texttt{URI\_CHARS} is the set of valid URI characters, except for question marks, which can only be used in the query and fragment, and single quotes, which are rarely used in URIs and cause issues for parsing.
+Using the built-in Scrapy pipeline system, these URIs are written, along with the \texttt{referer} URL to a file in JSON format.
+After setting the system DNS servers to those identified in \autoref{dns}, this crawler ran to completion in 8 minutes and 32 seconds, gathering 3427 JavaScript file URIs from 374 of the 500 homepages.
+The JS files are hosted across 737 domains.
+The crawler encountered 106 Scrapy exceptions, of which 60 were timeout errors, 37 were DNS errors, and 9 were no-response errors.
+3 more errors were caused by a Scrapy bug wherein an exception is raised when TLS certificates fail verification~\cite{Calderone2015}.
+\subsubsection*{Full-site Crawler}
+The second crawler performs a much broader crawl.
+It visits the homepage of each of the domains obtained from the Alexa top 500 list, like the homepages-only crawler, scraping for JS URIs in the same way with the same regular expression.
+However, this crawler also gathers all of the hyperlinks (using Scrapy's link-gathering library), and visits all of those links provided they are also within the list of top 500 domains.
+Again, it scrapes each of these pages for JS URIs and hyperlinks to visit, and recurses.
+I have never seen this crawler complete.
+A first run, performed in the default depth-first order, and storing links to visit in memory, gathered 910,490 JS file URIs from 268,537 distinct pages before running out of memory and crashing after 19 hours and 1 minute.
+These files are hosted on 118 different domains.
+The domain which accounted for the largest fraction of the JS URIs was \texttt{cmsjs.eastmoney.com}, hosting 377,156 of the 0.9M URIs.
+A second run, performed in breadth-first order, and storing link to visit on disk, has been running since 1am on August 16.
+At the time of writing this, 9pm on August 18, this second run has gathered 3,232,437 JS file URIs from 497,926 distinct pages.
+These files are hosted on 2,419 different domains.
+The domain which so far accounts for the largest fraction of the JS URIs is \texttt{static-web.b5m.com}, hosting 615,287 of the 3.2M URIs.
