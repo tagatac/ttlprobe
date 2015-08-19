@@ -41,8 +41,7 @@ def issue_request(host, message, tls=False, ttl=None):
 # request to download each of the JS files from 'script_list', and writing the
 # results to the results file
 def probe_domain(domain, script_list, outfile_lock):
-	distance = traceroute(domain)
-	if distance == None: return
+	distance = rerun_traceroute(domain)
 	for script_info in script_list:
 
 		# setup
@@ -66,7 +65,8 @@ def probe_domain(domain, script_list, outfile_lock):
 		# range has size zero)
 		print('Probing for ' + script + ', referred by ' + referer)
 		sys.stdout.flush()
-		upperbound = distance + 3
+		if distance: upperbound = distance + 3
+		else: upperbound = TRACEROUTE_MAX
 		lowerbound = 0
 		downloaded = False
 		while lowerbound != upperbound:
@@ -91,8 +91,11 @@ def probe_domain(domain, script_list, outfile_lock):
 
 		# record the result
 		result['ttlrequired'] = lowerbound
-		earlyby = distance - lowerbound
-		result['earlyby'] = earlyby
+		if distance:
+			earlyby = distance - lowerbound
+			result['earlyby'] = earlyby
+		else:
+			result['traceroutefailed'] = True
 		result['downloaded'] = downloaded
 		with outfile_lock:
 			with open(args.outfile, 'a') as f:
@@ -154,4 +157,10 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 		futures.append(executor.submit(probe_domain, domain,
 				    list_by_domain[domain], outfile_lock))
 concurrent.futures.wait(futures)
-with open(args.outfile, 'a') as f: f.write(']')
+
+# tidy up the end of the results file so that it can be json.load()'d
+shutil.copy(args.outfile, args.outfile+'.bak')
+with open(args.outfile) as f: contents = f.read()
+contents = contents.rstrip(',\n') + ']'
+with open(args.outfile, 'w') as f: f.write(contents)
+os.remove(args.outfile+'.bak')

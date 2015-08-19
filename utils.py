@@ -1,6 +1,7 @@
 # utils.py - various utilities useful for the TTL probe
 import ssl, subprocess, socket, time, os
 
+TRACEROUTE_MAX = 35
 BUFSIZE = 4096
 SSL_CONTEXT = ssl.create_default_context()
 
@@ -41,19 +42,27 @@ def parseURI(URI):
 	return tls, host, request, filename
 
 # Perform a TCP traceroute to the host, and return the number of hops required.
-def traceroute(host):
-	port = None
-	if ':' in host:
-		split_host = host.split(':')
-		if len(split_host) > 1: host, port = split_host[0], split_host[1]
-	command = ['sudo', 'tcptraceroute', host]
-	if port: command.append(port)
+def traceroute(authority):
+	host, port = authority, None
+	if ':' in authority:
+		split_authority = authority.split(':')
+		if len(split_authority) > 1:
+			host, port = split_host[0], split_host[1]
+	tcp_command = ['sudo', 'tcptraceroute', '-m', str(TRACEROUTE_MAX), host]
+	if port: tcp_command.append(port)
 	try:
 		traceroute_output = subprocess.check_output(command)
 	except subprocess.CalledProcessError as e:
-		print(e, '\nUnable to perform traceroute on', host)
+		print(e, '\nTraceroute failed for', authority)
 		return None
 	return int(traceroute_output.split(b'\n')[-2].split()[0])
+
+# Run traceroute twice in case it fails the first time
+def rerun_traceroute(authority):
+	for i in range(2):
+		result = traceroute(authority)
+		if result and result < TRACEROUTE_MAX: return result
+	return None
 
 # Construct the HTTP GET request string.
 def gen_message(host, request, referer):
