@@ -7,13 +7,11 @@ import json, sys
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-RESULTS_FILE = '../results/best/gcprobe.json'
-PLOT_FILE = 'figures/gcprobehist.png'
-
-if len(sys.argv) > 1: results_file = sys.argv[1]
-else: results_file = RESULTS_FILE
-if len(sys.argv) > 2: plot_file = sys.argv[2]
-else: plot_file = PLOT_FILE
+if len(sys.argv) < 3:
+	print('Usage: gen_figs.py')
+	sys.exit()
+results_file = sys.argv[1]
+plot_file = sys.argv[2]
 
 with open(results_file) as f: jsondata = json.load(f)
 x = list()

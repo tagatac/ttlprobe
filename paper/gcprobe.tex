@@ -67,7 +67,7 @@ For all of the following experiments, the two fastest DNS servers which place \t
 Using the list of domain names obtained with the crawler described in \autoref{alexa}, two other crawlers were written to scrape Javascript URIs from each domain.
 The first only scrapes JS URIs from the homepage of each domain: \url{https://github.com/tagatac/ttlprobe/blob/master/crawler/crawler/spiders/homepages.py}.
 The second attempts to crawl the entire site for each domain, scraping JS URIs from each page in each domain: \url{https://github.com/tagatac/ttlprobe/blob/master/crawler/crawler/spiders/topchinese.py}.
-\subsubsection*{Homepages-only Crawler}
+\subsubsection*{Homepages-only Crawler}\label{homepages-crawler}
 The first crawler visits each of the domains obtained from the Alexa top 500 list, and performs a regular expression search on the source of the entire homepage for JS file URIs.
 The regular expression used is \texttt{https?://[URI\_CHARS]*\textbackslash{}.js\allowbreak{}(?:\textbackslash{}?[URI\_CHARS?]*)?}, where \texttt{URI\_CHARS} is the set of valid URI characters, except for question marks, which can only be used in the query and fragment, and single quotes, which are rarely used in URIs and cause issues for parsing.
 Using the built-in Scrapy pipeline system, these URIs are written, along with the \texttt{referer} URL to a file in JSON format.
@@ -118,14 +118,14 @@ The probe for each domain involves:
 	\begin{enumerate}
 		\item Set an upper bound on the minimum TTL required to download it (initially three more than the distance estimated by \texttt{tcptraceroute}).
 		\item Set a lower bound on the TTL required (initially zero).
-		\item\label{loop} Request the file with a TTL halfway between the lower bound and the upper bound.
-		\item If the file is received, set the upper bound to be the TTL used.
+		\item\label{loop} Request the file five times with a TTL halfway between the lower bound and the upper bound.
+		\item If the file is received following any of the five requests, set the upper bound to be the TTL used.
 			If not, set the lower bound to be one greater than the TTL used.
 		\item\label{ttl} Repeat from \ref{loop} until the lower bound is the same as the upper bound.
 			This is decidedly the minimum TTL required to download this file.
-		\item Record the script URI, the \texttt{referer} URL, the \texttt{traceroute} result for the domain, the TTL value obtained in \ref{ttl}, the difference between the \texttt{traceroute} result and the TTL value, and whether the script was actually downloaded or not.
+		\item Record the script URI, the \texttt{referer} URL, the \texttt{tcptraceroute} result for the domain, the TTL value obtained in \ref{ttl}, the difference between the \texttt{tcptraceroute} result and the TTL value, and whether the script was actually downloaded or not.
 			(It may not be if it is not received by a request with TTL set to the initial upper bound.)
-		\item If the difference between the \texttt{traceroute} result and the TTL value is greater than 3, save the response to a file for further analysis.
+		\item If the difference between the \texttt{tcptraceroute} result and the TTL value is greater than 3, save the response to a file for further analysis.
 			(This may be a malicious injection by an entity other than the targeted server, which has been estimated to be further away than the request should have reached.)
 	\end{enumerate}
 \end{itemize}
