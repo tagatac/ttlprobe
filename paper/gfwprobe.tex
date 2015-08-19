@@ -43,7 +43,7 @@ Figure \ref{fig_gfwfalun} shows the request with TTL=18 prompting the first \tex
 	\caption{The GFW responds to the keywords \texttt{www.google.com/?falun} with several \texttt{[RST]} packets as soon as the request is sent 18 hops along the path to a Baidu server in Beijing.}
 	\label{fig_gfwfalun}
 \end{figure*}
-\subsection{Probing for Keyword Filtering On Encrypted Traffic}\label{gfwtls}
+\subsection{Probing for Keyword Filtering On \allowbreak{}Encrypted Traffic}\label{gfwtls}
 In a similar way to \autoref{gfwlocation}, I probed for keyword filtering on HTTP requests sent to servers in China, but this time with encrypted TCP packets.
 Note that many Chinese websites maintain servers in Hong Kong, or elsewhere outside of mainland China, so that DNS servers in the U.S. resolve those domains to servers that are not behind the GFW.
 In order to identify a Baidu server in China, I instead used a Chinese DNS server \texttt{115.28.245.152} located in Hangzhou, which I obtained from a site which lists public DNS servers~\cite{PublicDNS}.

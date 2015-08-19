@@ -1,3 +1,5 @@
+I first probed for injections by the GC like those that were seen during the DDoS attack on GitHub.
+Failing to find any, I turned my attention to other JavaScript files that the GC may be intercepting and replacing with malicious substitutes.
 \subsection{GitHub DDoS}
 This experiment looked for GC packets as were observed during the DDoS on GitHub.
 The observation specifically was a modified JavaScript file upon request for \texttt{hm.baidu.com/h.js}, an analytics tracking script similar to that used by Google Analytics.
@@ -14,27 +16,27 @@ What about other JS files?
 Is the GC responding to requests for other JS files with malicious substitutions?
 In order to answer this question, I gathered URIs for many JavaScript files from several of the most-visited sites in China.
 I then requested each of these files several times, varying the TTL value of the request until I could identify the minimum TTL value required (the minimum distance the request needed to travel along the path to the hosting server) in order for the server to send me the file.
-This experiment consisted of four main pieces:
-\begin{itemize}\addtolength{\itemsep}{-.35\baselineskip}
+This experiment consisted of six main pieces:
+\begin{enumerate}\addtolength{\itemsep}{-.35\baselineskip}
 	\item gathering the list of most-visited sites in China,
 	\item choosing a DNS server,
-	\item crawling those sites for JavaScript file URIs,
+	\item crawling the most-visited sites for JavaScript file URIs,
 	\item identifying a proper timeout to use when requesting the URIs,
-	\item estimating the distance to each domain hosting one or more of the JS files,
-	\item and identifying the minimum request TTL value required to obtain each JS file.
-\end{itemize}
+	\item estimating the distance to each domain hosting one or more of the JS files, and
+	\item identifying the minimum request TTL value required to obtain each JS file.
+\end{enumerate}
 The remainder of \autoref{otherjs} discusses the implementation of these pieces in further detail.
 \subsubsection{The Most-visited Sites in China}\label{alexa}
 \texttt{Alexa.com} was chosen as the source for the list of most-visited sites in China~\cite{AlexaCN}.
-A simple web crawler constructed on top of the Scrapy web crawling framework~\cite{Scrapy} was used to scrape the list of the top 500 most-visited and most-viewed sites.
+A simple web crawler constructed on top of the Scrapy web crawling framework~\cite{Scrapy} was used to scrape the list of the top 500 most-visited and most-viewed sites: \url{https://github.com/tagatac/ttlprobe/blob/master/crawler/crawler/spiders/alexa.py}.
 The crawler visits each of the pages in the Alexa top sites list, and records the domain names of all 25 sites listed on each of the 20 pages, for a total of 500 domain names.
 Using the built-in Scrapy pipeline system, these domain names are written to a file in JSON format.
 This crawler took 493 milliseconds to run.
 \subsubsection{DNS Servers}\label{dns}
 As mentioned earlier, U.S.-based DNS servers often resolve Chinese domains (like many of those obtained by the crawler in \autoref{alexa}) to servers outside of mainland China (e.g. in Hong Kong).
 In order to maximize the likelihood of the TTL probes passing through the GC infrastructure, I preferred a Chinese DNS server that would resolve Chinese domains to servers inside mainland China.
-I visited the same list of public Chinese DNS servers used in \autoref{fgwtls}~\cite{PublicDNS} and chose the most reliable 9 out of the most recently checked 100 servers.
-To decide which was most suitable for this experiment, I analyzed each of these servers for its location, performance as measured with \texttt{namebench}~\cite{Namebench}, and the location of the server to which it resolves \texttt{www.baidu.com} (Table \ref{tab_dns}).
+I visited the same list of public Chinese DNS servers used in \autoref{gfwtls}~\cite{PublicDNS} and chose the most reliable 9 out of the most recently checked 100 servers.
+To decide which was most suitable for this experiment, I analyzed each of these servers for its location, performance as measured with \texttt{namebench}~\cite{Stromberg2010}, and the location of the server to which it resolves \texttt{www.baidu.com} (Table \ref{tab_dns}).
 An OpenDNS server was also analyzed for comparison.
 For all of the following experiments, the two fastest DNS servers which place \texttt{www.baidu.com} in mainland China were used (\texttt{118.194.196.109} and \texttt{114.112.79.22}).
 \begin{table}
@@ -61,14 +63,15 @@ For all of the following experiments, the two fastest DNS servers which place \t
 	}
 	\label{tab_dns}
 \end{table}
-\subsubsection{JavaScript URIs}
+\subsubsection{JavaScript URIs}\label{jsfiles}
 Using the list of domain names obtained with the crawler described in \autoref{alexa}, two other crawlers were written to scrape Javascript URIs from each domain.
-The first only scrapes JS URIs from the homepage of each domain.
-The second attempts to crawl the entire site for each domain, scraping JS URIs from each page in each domain.
+The first only scrapes JS URIs from the homepage of each domain: \url{https://github.com/tagatac/ttlprobe/blob/master/crawler/crawler/spiders/homepages.py}.
+The second attempts to crawl the entire site for each domain, scraping JS URIs from each page in each domain: \url{https://github.com/tagatac/ttlprobe/blob/master/crawler/crawler/spiders/topchinese.py}.
 \subsubsection*{Homepages-only Crawler}
 The first crawler visits each of the domains obtained from the Alexa top 500 list, and performs a regular expression search on the source of the entire homepage for JS file URIs.
 The regular expression used is \texttt{https?://[URI\_CHARS]*\textbackslash{}.js\allowbreak{}(?:\textbackslash{}?[URI\_CHARS?]*)?}, where \texttt{URI\_CHARS} is the set of valid URI characters, except for question marks, which can only be used in the query and fragment, and single quotes, which are rarely used in URIs and cause issues for parsing.
 Using the built-in Scrapy pipeline system, these URIs are written, along with the \texttt{referer} URL to a file in JSON format.
+
 After setting the system DNS servers to those identified in \autoref{dns}, this crawler ran to completion in 8 minutes and 32 seconds, gathering 3427 JavaScript file URIs from 374 of the 500 homepages.
 The JS files are hosted across 737 domains.
 The crawler encountered 106 Scrapy exceptions, of which 60 were timeout errors, 37 were DNS errors, and 9 were no-response errors.
@@ -78,11 +81,52 @@ The second crawler performs a much broader crawl.
 It visits the homepage of each of the domains obtained from the Alexa top 500 list, like the homepages-only crawler, scraping for JS URIs in the same way with the same regular expression.
 However, this crawler also gathers all of the hyperlinks (using Scrapy's link-gathering library), and visits all of those links provided they are also within the list of top 500 domains.
 Again, it scrapes each of these pages for JS URIs and hyperlinks to visit, and recurses.
+
 I have never seen this crawler complete.
 A first run, performed in the default depth-first order, and storing links to visit in memory, gathered 910,490 JS file URIs from 268,537 distinct pages before running out of memory and crashing after 19 hours and 1 minute.
 These files are hosted on 118 different domains.
 The domain which accounted for the largest fraction of the JS URIs was \texttt{cmsjs.eastmoney.com}, hosting 377,156 of the 0.9M URIs.
+
 A second run, performed in breadth-first order, and storing link to visit on disk, has been running since 1am on August 16.
 At the time of writing this, 9pm on August 18, this second run has gathered 3,232,437 JS file URIs from 497,926 distinct pages.
 These files are hosted on 2,419 different domains.
 The domain which so far accounts for the largest fraction of the JS URIs is \texttt{static-web.b5m.com}, hosting 615,287 of the 3.2M URIs.
+\subsubsection{Proper Timeouts}
+In order to identify the minimum request TTL value required to obtain each JS file (discussed further in \autoref{distance-ttl}), it will be necessary to make several requests for each file, varying the TTL value associated with those requests.
+Furthermore, to identify the \textit{minimum} TTL value required to obtain these files, it will be necessary to issue several requests which will \textit{not} obtain each file.
+As such, a performance bottleneck in this probe will be time spent waiting for responses which will -- by design -- never come.
+It is therefore important to choose a suitable timeout for this waiting -- one which minimizes the amount of unnecessary waiting without giving up so soon that a significant number of responses is ignored.
+
+To this end, I wrote a Python 3 script to time the downloading of a sample of the JS files for which I obtained URIs in \autoref{jsfiles}: \url{https://github.com/tagatac/ttlprobe/blob/master/timeouttest.py}.
+This script chooses at random a specified number (100 by default) of JS URIs from a results file generated by one of the crawlers.
+It then parses that URI for the scheme, hostname, and request.
+Using that information, it generates an HTTP request message to look as if it is originating from a current version of Chrome.
+Finally, it issues the request using the Python 3 socket library (and ssl library if necessary), starts a timer, receives the response, and stops the timer.
+Each file in the randomly-selected list is requested thrice, and the response time for each request is recorded.
+Running this script for 100 URIs from the DFO partial results of the full-site crawler descibed in \autoref{jsfiles}, showed that the average response time was 718 milliseconds, with a standard deviation of 2,798 milliseconds.
+The maximum response time was 47.3 seconds; however, 99\% of the file responses were received within 3 seconds of the request.
+For this reason, 3 seconds was the time chosen to stop waiting for a response after issuing a \texttt{GET} request for one of the JS files.
+\subsubsection{Distance to Servers \& Minimum TTL Values}\label{distance-ttl}
+Finally, the most important part of the GC probe is the probe itself.
+The distance to the hosting servers and the minimum TTL values required to obtain JS files from those servers are both determined within the same Python 3 script: \url{https://github.com/tagatac/ttlprobe/blob/master/gcprobe.py}.
+This script first sorts the JS files to be probed by domain, allowing the probes to be parallelized by domain.
+It then spawns a thread pool with up to 512 threads and a results file lock, and allows each thread to probe the list of files hosted by a single domain.
+The probe for each domain involves:
+\begin{itemize}\addtolength{\itemsep}{-.35\baselineskip}
+	\item performing a \texttt{tcptraceroute} on the domain to estimate the distance to its servers, and
+	\item for each file hosted by the domain:
+	\begin{enumerate}
+		\item Set an upper bound on the minimum TTL required to download it (initially three more than the distance estimated by \texttt{tcptraceroute}).
+		\item Set a lower bound on the TTL required (initially zero).
+		\item\label{loop} Request the file with a TTL halfway between the lower bound and the upper bound.
+		\item If the file is received, set the upper bound to be the TTL used.
+			If not, set the lower bound to be one greater than the TTL used.
+		\item\label{ttl} Repeat from \ref{loop} until the lower bound is the same as the upper bound.
+			This is decidedly the minimum TTL required to download this file.
+		\item Record the script URI, the \texttt{referer} URL, the \texttt{traceroute} result for the domain, the TTL value obtained in \ref{ttl}, the difference between the \texttt{traceroute} result and the TTL value, and whether the script was actually downloaded or not.
+			(It may not be if it is not received by a request with TTL set to the initial upper bound.)
+		\item If the difference between the \texttt{traceroute} result and the TTL value is greater than 3, save the response to a file for further analysis.
+			(This may be a malicious injection by an entity other than the targeted server, which has been estimated to be further away than the request should have reached.)
+	\end{enumerate}
+\end{itemize}
+Results from running this probe are discussed in \autoref{results}.
