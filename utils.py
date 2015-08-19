@@ -48,8 +48,8 @@ def traceroute(authority):
 		split_authority = authority.split(':')
 		if len(split_authority) > 1:
 			host, port = split_host[0], split_host[1]
-	tcp_command = ['sudo', 'tcptraceroute', '-m', str(TRACEROUTE_MAX), host]
-	if port: tcp_command.append(port)
+	command = ['sudo', 'tcptraceroute', '-m', str(TRACEROUTE_MAX), host]
+	if port: command.append(port)
 	try:
 		traceroute_output = subprocess.check_output(command)
 	except subprocess.CalledProcessError as e:
