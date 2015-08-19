@@ -9,16 +9,16 @@ $(date)TTLProbe.pdf : $(SECTIONS:=.tex) $(addprefix figures/, $(JPGS:=.jpg)) $(a
 	pdflatex -draftmode -jobname $(date)TTLProbe main.tex
 	pdflatex -jobname $(date)TTLProbe main.tex
 
-figures/histhomepages.png : ../results/best/gcprobe.json
+figures/histhomepages.png : ../results/best/gcprobe.json scripts/gen_plot.py
 	scripts/gen_plot.py $< $@
 
-figures/histhomepages-mod.png : ../results/best/modified.json
+figures/histhomepages-mod.png : ../results/best/modified.json scripts/gen_plot.py
 	scripts/gen_plot.py $< $@
 
-figures/histfull.png : ../results/20150818T1418-memfailfiles/gcprobe.json
+figures/histfull.png : ../results/20150818T1418-memfailfiles/gcprobe.json scripts/gen_plot.py
 	scripts/gen_plot.py $< $@
 
-figures/histfull-mod.png : ../results/20150818T1418-memfailfiles/modified.json
+figures/histfull-mod.png : ../results/20150818T1418-memfailfiles/modified.json scripts/gen_plot.py
 	scripts/gen_plot.py $< $@
 
 
