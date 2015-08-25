@@ -22,7 +22,7 @@ Figure~\ref{fig_histhomepages-mod} shows the histogram redrawn for the same data
 \begin{figure}
 	\includegraphics[width=\columnwidth]{figures/histhomepages-mod}
 	\caption{
-		A histogram of the same data from \ref{fig_histhomepages} adjusted for updated \texttt{tcptraceroute} results in cases where the original result was 30 (and probably erroneous due to a failed traceroute).
+		A histogram of the same data from Figure~\ref{fig_histhomepages} adjusted for updated \texttt{tcptraceroute} results in cases where the original result was 30 (and probably erroneous due to a failed traceroute).
 		The one case where \texttt{tcptraceroute} never succeeded is not included in this adjusted plot.
 	}
 	\label{fig_histhomepages-mod}
@@ -41,9 +41,15 @@ Ignoring cases where \texttt{tcptraceroute} failed gives a slightly different pi
 \begin{figure}
 	\includegraphics[width=\columnwidth]{figures/histfull-mod}
 	\caption{
-		A histogram showing how often a file request succeeded with a TTL value less than the number of hops to the server (as estimated by \texttt{tcptraceroute}, when downloading files from URIs scraped by the full-site crawler prior to failure in DFO mode.
+		A histogram of the same data from Figure~\ref{fig_histfull}, ignoring scripts hosted on domains for which \texttt{tcptraceroute} failed.
 	}
 	\label{fig_histfull-mod}
 \end{figure}
-Further analysis shows that all of the scripts for which the difference between the \texttt{tcptraceroute} result and the TTL value required for download is greater than 8 (the cluster on the right in Figure~\ref{fig_histfull-mod}), are hosted on \texttt{ir.ebaystatic.com}.
-The \texttt{tcptraceroute} results recorded by the probe script is 20, but a manual \texttt{tcptraceroute} run on the same system gives a result of 16 on 8/19, indicating that the cluster on the right is not so anomalous as it first seems.
+Further analysis shows that all of the scripts for which the difference between the \texttt{tcptraceroute} result and the TTL value required for download is greater than 4 in Figure~\ref{fig_histfull-mod} are hosted on one of the three domains:
+\begin{itemize}\addtolength{\itemsep}{-.35\baselineskip}
+	\item \texttt{ir.ebaystatic.com},
+	\item \texttt{js4.eastmoney.com}, or
+	\item \texttt{www.lady8844.com}.
+\end{itemize}
+The \texttt{tcptraceroute} results recorded by the probe script for these domains is, respectively, 20, 26, and 24.
+However, a manual \texttt{tcptraceroute} run on the same system gives results of 16, 21, and 22 on August 24\textsuperscript{th}, indicating that the cluster on the right is not so anomalous as it first seems.

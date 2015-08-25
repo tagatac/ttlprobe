@@ -59,10 +59,11 @@ def traceroute(authority):
 
 # Run traceroute twice in case it fails the first time
 def rerun_traceroute(authority):
+	results = list()
 	for i in range(2):
 		result = traceroute(authority)
-		if result and result < TRACEROUTE_MAX: return result
-	return None
+		if result and result < TRACEROUTE_MAX: results.append(result)
+	if results: return min(results)
 
 # Construct the HTTP GET request string.
 def gen_message(host, request, referer):

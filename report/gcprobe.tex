@@ -89,9 +89,9 @@ The domain which accounted for the largest fraction of the JS URIs was \texttt{c
 This run also used a more basic regular expression for extracting URIs, one which ignores the queries and segments (everything after the first question mark).
 
 A second run, performed in breadth-first order, and storing link to visit on disk, has been running since 1am on August 16.
-At the time of writing this, 9pm on August 18, this second run has gathered 3,232,437 JS file URIs from 497,926 distinct pages.
-These files are hosted on 2,419 different domains.
-The domain which so far accounts for the largest fraction of the JS URIs is \texttt{static-web.b5m.com}, hosting 615,287 of the 3.2M URIs.
+At the time of writing this, 11pm on August 24th, this second run has gathered 17,655,852 JS file URIs from 1,892,218 distinct pages.
+These files are hosted on 4,274 different domains.
+The domain which so far accounts for the largest fraction of the JS URIs is \texttt{static-web.b5m.com}, hosting 2,408,447 of the 17.7 million URIs.
 \subsubsection{Proper Timeouts}
 In order to identify the minimum request TTL value required to obtain each JS file (discussed further in \autoref{distance-ttl}), it will be necessary to make several requests for each file, varying the TTL value associated with those requests.
 Furthermore, to identify the \textit{minimum} TTL value required to obtain these files, it will be necessary to issue several requests which will \textit{not} obtain each file.

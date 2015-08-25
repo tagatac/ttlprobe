@@ -17,6 +17,7 @@ def dig_baidu(dns):
 
 if len(sys.argv) < 2:
 	print('Usage: dnsanalysis <jsonfile>')
+	sys.exit(1)
 with open(sys.argv[1]) as f: jsondata = json.load(f)
 for server in jsondata:
 	print(server+'\n===============')
