@@ -73,7 +73,7 @@ def name_to_address(name):
 	try:
 		answer = resolver.query(name, 'A')
 	except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer) as e:
-		print('Unable to resolve the name \'' + name)
+		print('Unable to resolve the name \'' + name + '\'')
 		return None
 	return str(answer[0])
 
