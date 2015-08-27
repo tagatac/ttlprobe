@@ -132,6 +132,7 @@ with open(args.filelist) as f: jsondata = json.load(f)
 # parse the URIs and refactor the list of JS files by domain
 list_by_domain = dict()
 for referer in jsondata:
+	if 'https://msdn.microsoft.com' not in referer['referer']: continue
 	for script in referer['scripts']:
 		try: tls, host, port, request, filename = parseURI(script)
 		except TTLProbeError as e:
@@ -140,6 +141,11 @@ for referer in jsondata:
 		if not host in list_by_domain: list_by_domain[host] = list()
 		list_by_domain[host].append((tls, host, port, request, filename,
 					     referer['referer']))
+
+for domain in list_by_domain:
+	if not list_by_domain[domain][0][0]: continue
+	probe_domain(domain, list_by_domain[domain], threading.Lock(), threading.Lock())
+	sys.exit()
 
 # probe all of the JS files in domain-specific threads (concurrently by domain,
 # serially by script)
