@@ -12,15 +12,12 @@ TIMEOUT = 3 #seconds
 MAX_WORKERS = 512 #ThreadPool size
 
 # Issue the HTTP GET request repeatedly for a given referer, script, and ttl
-# value, recording the amount of time it takes for each
-def issue_request(host, message, tls=False, ttl=None):
+# value
+def issue_request(host, address, port, message, tls=False, ttl=None):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	if tls:
 		s = SSL_CONTEXT.wrap_socket(s, server_hostname=host)
-		port = 443
-	else:
-		port = 80
-	try: s.connect((host, port))
+	try: s.connect((address, port))
 	except: return None
 	s.setblocking(False)
 	if ttl: s.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
@@ -40,8 +37,10 @@ def issue_request(host, message, tls=False, ttl=None):
 # Probe one domain ('domain'), identifying the minimum TTL required in the HTTP
 # request to download each of the JS files from 'script_list', and writing the
 # results to the results file
-def probe_domain(domain, script_list, outfile_lock):
-	distance = rerun_traceroute(domain)
+def probe_domain(domain, script_list, traceroute_lock, outfile_lock):
+	address = name_to_address(domain)
+	first_port = script_list[0][2]
+	with traceroute_lock: distance = rerun_traceroute(address, first_port)
 	for script_info in script_list:
 
 		# setup
@@ -49,12 +48,14 @@ def probe_domain(domain, script_list, outfile_lock):
 		tls = script_info[0]
 		protocol = {True: 'https://', False: 'http://'}[tls]
 		host = script_info[1]
-		request = script_info[2]
-		filename = script_info[3]
-		referer = script_info[4]
+		port = script_info[2]
+		request = script_info[3]
+		filename = script_info[4]
+		referer = script_info[5]
 		script = urllib.parse.urljoin(protocol+host, request)
 		result['script'] = script
 		result['referer'] = referer
+		result['address'] = address
 		result['traceroute'] = distance
 		message = gen_message(host, request, referer)
 
@@ -75,8 +76,8 @@ def probe_domain(domain, script_list, outfile_lock):
 			      (script, lowerbound, upperbound, ttl))
 			downloaded_this_ttl = False
 			for i in range(args.repeat):
-				response = issue_request(host, message, tls,
-							 ttl)
+				response = issue_request(host, address, port,
+							 message, tls, ttl)
 				if response:
 					# file received - save it
 					save_file(args.dir, host, filename,
@@ -132,30 +133,30 @@ with open(args.filelist) as f: jsondata = json.load(f)
 list_by_domain = dict()
 for referer in jsondata:
 	for script in referer['scripts']:
-		try:
-			tls, host, request, filename = parseURI(script)
-		except URIError as e:
-			print('The URI ' + script + ' is malformed. ' +
-			      'There should be at least 4 slash-delimited ' +
-			      'segments, but there are only ' + str(e.numsegs))
-			continue
-		except ProtocolError as e:
-			print('Protocol ' + e.prtcl +
-			      ' is not allowed. Skipping file: ' + script)
+		try: tls, host, port, request, filename = parseURI(script)
+		except TTLProbeError as e:
+			print(e)
 			continue
 		if not host in list_by_domain: list_by_domain[host] = list()
-		list_by_domain[host].append((tls, host, request, filename,
+		list_by_domain[host].append((tls, host, port, request, filename,
 					     referer['referer']))
+
+#for domain in list_by_domain:
+#	if not list_by_domain[domain][0][0]: continue
+#	probe_domain(domain, list_by_domain[domain], threading.Lock())
+#	sys.exit()
 
 # probe all of the JS files in domain-specific threads (concurrently by domain,
 # serially by script)
 with open(args.outfile, 'w') as f: f.write('[')
+traceroute_lock = threading.Lock()
 outfile_lock = threading.Lock()
 futures = list()
 with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 	for domain in list_by_domain:
 		futures.append(executor.submit(probe_domain, domain,
-				    list_by_domain[domain], outfile_lock))
+				list_by_domain[domain], traceroute_lock,
+				outfile_lock))
 concurrent.futures.wait(futures)
 
 # tidy up the end of the results file so that it can be json.load()'d

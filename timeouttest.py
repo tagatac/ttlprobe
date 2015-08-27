@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, os, sys, json, random, statistics
+import argparse, os, sys, json, random, statistics, socket
 from utils import *
 
 NUM_FILES = 100
@@ -7,6 +7,32 @@ REPEAT_COUNT = 3
 FILE_LIST = 'jsfiles.json'
 STORAGE_DIR = 'timeouttestfiles'
 RESULTS_FILE = 'timeouttest.json'
+
+# Issue the HTTP GET request repeatedly for a given referer and script,
+# recording the amount of time it takes for each
+def issue_request(host, message, tls=False, ttl=None):
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	if tls:
+		s = SSL_CONTEXT.wrap_socket(s, server_hostname=host)
+		port = 443
+	else:
+		port = 80
+	try: s.connect((host, port))
+	except: return None, None
+	if ttl: s.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
+	s.send(message)
+	full_response = b''
+	time_before = time.time()
+	while True:
+		try:
+			response = s.recv(BUFSIZE)
+			if response: full_response += response
+			else: break
+		except:
+			break
+	download_time = time.time() - time_before
+	s.close()
+	return full_response, download_time
 
 # commandline argument parser
 parser = argparse.ArgumentParser(description='Test the time required to download each of several files.')
