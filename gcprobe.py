@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import socket, argparse, os, sys, json, concurrent.futures, urllib.parse
+import socket, argparse, os, sys, json, concurrent.futures, urllib.parse, time
 import threading, shutil
 from utils import *
 
@@ -63,7 +63,8 @@ def probe_domain(domain, script_list, traceroute_lock, outfile_lock):
 		# the upperbound; when it is not, increase the lowerbound; set
 		# the TTL value in the middle of the range and repeat until the
 		# range has size zero)
-		print('Probing for ' + script + ', referred by ' + referer)
+		print(time.strftime('%Y-%m-%d %H:%M:%S') + 'Probing for ' + \
+		      script + ', referred by ' + referer)
 		sys.stdout.flush()
 		if distance: upperbound = distance + 3
 		else: upperbound = TRACEROUTE_MAX
