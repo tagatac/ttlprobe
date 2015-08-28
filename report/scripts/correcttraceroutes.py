@@ -31,4 +31,4 @@ for entry in jsondata:
 			entry['earlyby'] = entry['traceroute'] - entry['ttlrequired']
 
 with open(os.path.join(os.path.dirname(results_file), 'modified.json'), 'w') as f:
-	json.dump(jsondata, f)
+	json.dump(jsondata, f, separators=(',\n', ': '))
