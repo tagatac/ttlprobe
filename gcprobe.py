@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import socket, select, argparse, os, sys, json, concurrent.futures, urllib.parse
+import socket, argparse, os, sys, json, concurrent.futures, urllib.parse
 import threading, shutil
 from utils import *
 
@@ -19,17 +19,16 @@ def issue_request(host, address, port, message, tls=False, ttl=None):
 		s = SSL_CONTEXT.wrap_socket(s, server_hostname=host)
 	try: s.connect((address, port))
 	except: return None
-	s.setblocking(False)
 	if ttl: s.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
 	s.send(message)
+	s.settimeout(TIMEOUT)
 	full_response = b''
 	while True:
-		ready = select.select([s], [], [], TIMEOUT)
-		if ready[0]:
+		try:
 			response = s.recv(BUFSIZE)
 			if response: full_response += response
 			else: break
-		else:
+		except socket.timeout:
 			break
 	s.close()
 	return full_response
@@ -133,7 +132,8 @@ with open(args.filelist) as f: jsondata = json.load(f)
 list_by_domain = dict()
 for referer in jsondata:
 	for script in referer['scripts']:
-		try: tls, host, port, request, filename = parseURI(script)
+		try:
+			tls, host, port, request, filename = parseURI(script)
 		except TTLProbeError as e:
 			print(e)
 			continue

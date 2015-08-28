@@ -1,5 +1,5 @@
 # utils.py - various utilities useful for the TTL probe
-import ssl, subprocess, socket, time, os, dns.resolver, scapy.all as scapy
+import ssl, os, dns.resolver, scapy.all as scapy
 
 DNS_SERVERS = ['114.112.79.22', '118.194.196.109']
 TRACEROUTE_MAX = 35

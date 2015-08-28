@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, os, sys, json, random, statistics, socket
+import argparse, os, sys, json, random, statistics, socket, time
 from utils import *
 
 NUM_FILES = 100
@@ -10,16 +10,11 @@ RESULTS_FILE = 'timeouttest.json'
 
 # Issue the HTTP GET request repeatedly for a given referer and script,
 # recording the amount of time it takes for each
-def issue_request(host, message, tls=False, ttl=None):
+def issue_request(host, port, message, tls=False):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	if tls:
-		s = SSL_CONTEXT.wrap_socket(s, server_hostname=host)
-		port = 443
-	else:
-		port = 80
+	if tls: s = SSL_CONTEXT.wrap_socket(s, server_hostname=host)
 	try: s.connect((host, port))
 	except: return None, None
-	if ttl: s.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
 	s.send(message)
 	full_response = b''
 	time_before = time.time()
@@ -74,22 +69,17 @@ all_times = dict()
 flattened_times = list()
 for f in download_files:
 	try:
-		tls, host, request, filename = parseURI(f)
-	except URIError as e:
-		print('The URI ' + f + ' is malformed. ' +
-		      'There should be at least 4 slash-delimited ' +
-		      'segments, but there are only ' + str(e.numsegs))
-		continue
-	except ProtocolError as e:
-		print('Protocol ' + e.prtcl +
-		      ' is not allowed. Skipping file: ' + f)
+		tls, host, port, request, filename = parseURI(f)
+	except TTLProbeError as e:
+		print(e)
 		continue
 	message = gen_message(host, request, referer['referer'])
 	print('Requesting ' + f + ' ' + str(args.repeat)
 	      + ' times, referred by ' + referer['referer'])
 	these_times = list()
 	for i in range(args.repeat):
-		response, download_time = issue_request(host, message, tls)
+		response, download_time = issue_request(host, port, message,
+							tls)
 		if response:
 			save_file(args.dir, host, filename, response, i)
 			these_times.append(download_time)
