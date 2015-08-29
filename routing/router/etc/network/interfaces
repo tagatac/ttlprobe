@@ -1,0 +1,17 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The local network interface
+allow-hotplug eth0
+iface eth0 inet dhcp
+
+# The bridged network with Raigonn's Wi-Fi service
+auto eth1
+iface eth1 inet dhcp
+	pre-up echo 1 > /proc/sys/net/ipv4/ip_forward
