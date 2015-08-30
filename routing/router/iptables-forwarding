@@ -21,8 +21,8 @@ COMMIT
 # netfilterqueue library
 -A adpubs -j NFQUEUE --queue-num 1
 
-# Also queue packets from adnetpub.yaolan.com so that we can keep track of TCP
-# sequence numbers
--A FORWARD -p tcp -s 117.79.133.119 --sport 80 -i eth1 -o eth0 -j NFQUEUE --queue-num 2
+# Also queue SYN/ACK packets from adnetpub.yaolan.com so that we can keep track
+# of TCP sequence numbers
+-A FORWARD -p tcp --tcp-flags ALL SYN,ACK -s 117.79.133.119 --sport 80 -i eth1 -o eth0 -j NFQUEUE --queue-num 2
 
 COMMIT
