@@ -55,5 +55,4 @@ for qnum in callbacks:
 
 signal.signal(signal.SIGINT, handler)
 
-while True:
-	pass
+thread.join()
