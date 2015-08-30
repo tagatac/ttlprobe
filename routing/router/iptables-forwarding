@@ -5,4 +5,14 @@ COMMIT
 *filter
 -A INPUT -i eth1 -m state --state NEW,INVALID -j DROP
 -A FORWARD -i eth1 -m state --state NEW,INVALID -j DROP
+
+# New chain to filter packets requesting http://adnetpub.yaolan.com/js/adpubs.js
+-N adpubs
+-A FORWARD -i eth0 -j adpubs
+# Return if the packet doesn't match string "GET /js/adpubs.js HTTP/1.1\r\n".
+-A adpubs -m string --algo bm ! --hex-string "|474554202f6a732f6164707562732e6a7320485454502f312e310d0a|" -j RETURN
+# Matches string "Host: adnetpub.yaolan.com\r\n" (which may or may not come
+# immediately after the "GET" line). If we have made it this far, both strings
+# are in the packet --> drop it
+-A adpubs -m string --algo bm --hex-string "|486f73743a2061646e65747075622e79616f6c616e2e636f6d0d0a|" -j DROP
 COMMIT
