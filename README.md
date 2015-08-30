@@ -5,9 +5,9 @@
 * **pcaps**: packet captures from past TTL probe experiments
 * **prelim**: results of preliminary experiment to reproduce the CitizenLab's
 	TTL probe results
+* **report**: project results and status
 * **results**: results from probes for GC-like activity
 * **scripts**: some helper scripts to quickly analyze URI and results JSON files
-* **report**: project results and status
 * **toronto**: packet capture from the CitizenLab's Great Cannon experiments
 * **gcprobe.py**: main GC TTL probe script
 * **gfwprobe.py**: script to probe for GFW keyword filtering
