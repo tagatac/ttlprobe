@@ -10,7 +10,7 @@ COMMIT
 
 # New chain to filter packets requesting http://adnetpub.yaolan.com/js/adpubs.js
 -N adpubs
--A FORWARD -p tcp -s 192.168.29.49 -d 117.79.133.119 --dport 80 -i eth0 -j adpubs
+-A FORWARD -p tcp -s 192.168.29.49 -d 117.79.133.119 --dport 80 -i eth0 -o eth1 -j adpubs
 # Return if the packet doesn't match string "GET /js/adpubs.js HTTP/1.1\r\n".
 -A adpubs -m string --algo bm ! --hex-string "|474554202f6a732f6164707562732e6a7320485454502f312e310d0a|" -j RETURN
 # Matches string "Host: adnetpub.yaolan.com\r\n" (which may or may not come
@@ -20,4 +20,9 @@ COMMIT
 # Queue the packet so that we can modify it to contain adpub.js with the
 # netfilterqueue library
 -A adpubs -j NFQUEUE --queue-num 1
+
+# Also queue packets from adnetpub.yaolan.com so that we can keep track of TCP
+# sequence numbers
+-A FORWARD -p tcp -s 117.79.133.119 --sport 80 -i eth1 -o eth0 -j NFQUEUE --queue-num 2
+
 COMMIT

@@ -1,0 +1,38 @@
+HTTP/1.1 200 OK
+Content-Type: application/x-javascript
+Last-Modified: Fri, 27 Mar 2015 09:48:56 GMT
+Accept-Ranges: bytes
+ETag: "18e0413e7368d01:0"
+Server: Microsoft-IIS/7.5
+X-Powered-By: ASP.NET
+Date: TIMESTRING
+Content-Length: 532
+
+﻿ 
+	 ( 
+		function (G, D, s, c, p)
+		{
+	
+			c=
+			{ 
+			
+				UA:"UA-yaolan-000001", 
+				NO_FLS:0, 
+				WITH_REF:1, 
+				URL:'http://adnetpub.yaolan.com/js/iwt-min.js'
+			};
+				
+			G._iwt?G._iwt.track(c,p):(G._iwtTQ=G._iwtTQ || []).push([c,p]),!G._iwtLoading && lo();
+			function lo(t) 
+			{ 
+				G._iwtLoading = 1;
+				s = D.createElement("script");
+				s.src=c.URL;
+				t=D.getElementsByTagName("script");
+				t=t[t.length-1];
+				t.parentNode.insertBefore(s,t);
+			} 
+		}
+		
+	)(this,document);
+	  

@@ -1,4 +1,4 @@
-K
+HTTP/1.1 200 OK
 Content-Type: application/x-javascript
 Last-Modified: Fri, 27 Mar 2015 09:48:56 GMT
 Accept-Ranges: bytes
@@ -19,7 +19,7 @@ Content-Length: 532
 				UA:"UA-yaolan-000001", 
 				NO_FLS:0, 
 				WITH_REF:1, 
-				URL:'http://adnetpub.yaolan.com/js/iwt-min.js'
+				URL:'http://adnetpub.malice.com/js/iwt-min.js'
 			};
 				
 			G._iwt?G._iwt.track(c,p):(G._iwtTQ=G._iwtTQ || []).push([c,p]),!G._iwtLoading && lo();
