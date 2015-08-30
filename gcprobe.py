@@ -118,6 +118,9 @@ parser.add_argument('-d', '--dir', default=STORAGE_DIR, type=str, help='the path
 parser.add_argument('-o', '--outfile', default=RESULTS_FILE, type=str, help='the path of the file in which to store the results')
 args = parser.parse_args()
 
+# echo the command line arguments for logging purposes
+print(sys.argv)
+
 # make sure the download folder and results file don't exist yet
 if os.path.exists(args.dir):
 	print('ERROR: Download directory ' + args.dir  + '  already exists')

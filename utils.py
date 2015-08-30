@@ -96,7 +96,7 @@ def rerun_traceroute(host, port):
 
 # Construct the HTTP GET request string.
 def gen_message(host, request, referer):
-	message = 'GET /' + request + ' HTTP/1.1\r\n'
+	message = 'GET ' + request + ' HTTP/1.1\r\n'
 	message += 'Host: ' + host + '\r\n'
 	message += 'Connection: close\r\n'
 	message += 'Cache-Control: max-age=0\r\n'
