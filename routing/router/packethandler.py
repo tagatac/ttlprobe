@@ -2,12 +2,14 @@
 from netfilterqueue import NetfilterQueue
 import binascii
 
-def print_and_accept(pkt):
-	with open('packet.pcap', 'w') as f: f.write(binascii.hexlify(pkt.get_payload()))
+def modify_and_accept(pkt):
+	print('hit!')
 	print(pkt.get_payload())
+	print(binascii.hexlify(pkt.get_payload()))
+	with open('adpub.pcap', 'rb') as f: pkt.set_payload(f.read())
 	pkt.accept()
 
 nfqueue = NetfilterQueue()
-nfqueue.bind(1, print_and_accept)
+nfqueue.bind(1, modify_and_accept)
 try: nfqueue.run()
 except KeyboardInterrupt: print()

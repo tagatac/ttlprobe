@@ -1,34 +1,30 @@
-*mangle
-# New chain to filter packets requesting http://adnetpub.yaolan.com/js/adpubs.js
--N adpubs
--A PREROUTING -p tcp -s 192.168.29.49 -i eth0 -j adpubs
-# Return if the packet doesn't match string "GET /js/adpubs.js HTTP/1.1\r\n".
--A adpubs -m string --algo bm ! --hex-string "|474554202f6a732f6164707562732e6a7320485454502f312e310d0a|" -j RETURN
-# Matches string "Host: adnetpub.yaolan.com\r\n" (which may or may not come
-# immediately after the "GET" line). If we have made it this far, both strings
-# are in the packet --> send the file back
--A adpubs -m string --algo bm ! --hex-string "|486f73743a2061646e65747075622e79616f6c616e2e636f6d0d0a|" -j RETURN
-# Mark the packet so we can route it properly in the nat table
--A adpubs -j MARK --set-mark 1
-COMMIT
-
 *nat
-# Turn the packet around to fire it back at the TTLProbe VM
--A PREROUTING -p tcp -m mark --mark 1 -j DNAT --to 192.168.29.49:57233
-# Queue the packet so that we can modify it to contain adpub.js with the
-# netfilterqueue library
--A PREROUTING -m mark --mark 1 -j NFQUEUE --queue-num 1
 
 # Standard NAT
 -A POSTROUTING -o eth1 -j MASQUERADE
 
 # Finally set the source port to look like adpubs.js came from
 # adnetpub.yaolan.com
--A POSTROUTING -p tcp -m mark --mark 1 -j SNAT --to 117.79.133.119:80
+-A POSTROUTING -p tcp -s 192.168.29.49 --sport 57233 -j SNAT --to 117.79.133.119:80
 COMMIT
 
 *filter
 # Drop packets initiated from outside the VMM host
 -A INPUT -i eth1 -m state --state NEW,INVALID -j DROP
 -A FORWARD -i eth1 -m state --state NEW,INVALID -j DROP
+# New chain to filter packets requesting http://adnetpub.yaolan.com/js/adpubs.js
+-N adpubs
+-A FORWARD -p tcp -i eth0 -j adpubs
+# Return if the packet doesn't match string "GET /js/adpubs.js HTTP/1.1\r\n".
+#-A adpubs -m string --algo bm ! --hex-string "|474554202f6a732f6164707562732e6a7320485454502f312e310d0a|" -j RETURN
+-A adpubs -m string --algo bm ! --hex-string "|474554202f6a|" -j RETURN
+# Matches string "Host: adnetpub.yaolan.com\r\n" (which may or may not come
+# immediately after the "GET" line). If we have made it this far, both strings
+# are in the packet --> send the file back
+-A adpubs -m string --algo bm ! --hex-string "|486f73743a2061646e65747075622e79616f6c616e2e636f6d0d0a|" -j RETURN
+# Turn the packet around to fire it back at the TTLProbe VM
+#-A adpubs -p tcp -j DNAT --to 192.168.29.49:57233
+# Queue the packet so that we can modify it to contain adpub.js with the
+# netfilterqueue library
+-A adpubs -j NFQUEUE --queue-num 1
 COMMIT
