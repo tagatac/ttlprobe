@@ -130,3 +130,38 @@ The probe for each domain involves:
 			(This may be a malicious injection by an entity other than the targeted server, which has been estimated to be further away than the request should have reached.)
 	\end{enumerate}
 \end{itemize}
+\subsection{Testing the Probe}
+Before placing too much stock in the results of the probe script, I demonstrated that it was able to identify files injected in a controlled environment in a manner similar to that of the GC's injections.
+\subsubsection{Network Architecture}
+The test probe was run from a Debian 8 virtual machine ``TTLProbe'' hosted in VMware on my desktop computer.
+All of the virtual machine's traffic was routed through its only network interface (on a local VMware network) to another Debian 8 virtual machine ``Router'', also hosted in VMware on my desktop, by setting Router as its gateway in \texttt{/etc/network/interfaces}.
+In addition to a network interface on the same local VMware network with TTLProbe, Router had another network interface bridged to the physical Wi-Fi interface on my desktop, giving it access to the Internet.
+Router was then configured with \texttt{iptables}~\cite{Russell2000} to allow forwarding of IPv4 packets, thus giving TTLProbe access to the Internet.
+\subsubsection{File Injection}
+In addition to IPv4 forwarding, however, Router was further configured with \texttt{iptables} to respond to HTTP requests for a specific file: \texttt{http://adnetpub.yaolan.com/js/adpubs.js}.
+This is accomplished as follows:
+\begin{enumerate}\addtolength{\itemsep}{-.35\baselineskip}
+	\item\label{synack} All TCP SYN-ACK packets forwarded from \texttt{http://adnetpub.yaolan.com} (117.79.133.119:80) to the host-only network are queued for inspection with the \texttt{NFQUEUE} target.
+	\item All TCP packets destined for \texttt{http://adnetpub.yaolan.com:80} from TTLProbe are analyzed with the \texttt{strings} netfilter extension for requests for \texttt{http://adnetpub.yaolan.com/js/\allowbreak{}adpubs.js}.
+	\item If \texttt{adpubs.js} is requested, the packet is also queued for inspection with the \texttt{NFQUEUE} target, although using a different queue than in step~\ref{synack}.
+	\item Finally, a Python 2 daemon processes both queues using \texttt{python-netfilterqueue}~\cite{Kerkhoff2015}, Python bindings for the \texttt{libnetfilter\_queue} C library:
+	\begin{itemize}
+		\item The SYN-ACK packets are inspected for their sequence numbers, and then accepted, so that they continue on the TTLProbe, allowing TCP connections to be made.
+		\item The request packets are dropped so that the request never makes it to \texttt{adnetpub.yaolan.com}.
+		\item Then a phony JS file containing a reference to a fake URI at \texttt{malice.com} is used to construct a TCP packet in response to the request, and the sequence number from above is used to make it look like the packet is part of the same TCP connection.
+	\end{itemize}
+\end{enumerate}
+Requests for the file from \texttt{wget}, \texttt{netcat}, and the TTL probe script developed in this work are all able to receive the phony JS file as if it had come from \texttt{adnetpub.yaolan.com}.
+\subsubsection{Verdict}
+The probe was run on a small subset of the URIs scraped by the homepage-only crawler described in \autoref{homepages-crawler} -- particularly those scripts scraped from one homepage: \texttt{http://www.yaolan.com}.
+As expected, the GC probe script detected the injection of the single file \texttt{http://adnetpub.yaolan.com/js/adpubs.js} as coming from somewhere much closer than the server hosting it.
+In fact, Figure~\ref{fig_histtest} shows that it was the only file to differ from the \texttt{tcptraceroute} distance estimate at all, and in dramatic fashion.
+\begin{figure}
+	\includegraphics[width=\columnwidth]{figures/histtest}
+	\caption{
+		A histogram showing how often a file request succeeded with a TTL value less than the number of hops to the server (as estimated by \texttt{tcptraceroute}, when downloading a small subset of files from URIs scraped by the homepage-only crawler.
+		Note the single file for which the TTL value was less than the number of hops to the server, was the very file that the VM Router was injecting.
+	}
+	\label{fig_histtest}
+\end{figure}
+This result gives us some confidence that the probe script is able to detect files injected between the computer running it the servers hosting the files it requests.
