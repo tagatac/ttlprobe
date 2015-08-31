@@ -7,10 +7,9 @@ In the case of the GitHub DDoS, only a single file was seen to be targeted.
 Finally, it assumes that the IP address from which the probe is run is not being filtered.
 Marczak et al. observed that no injections were made in response to requests originating from one of four test IP addresses.
 \subsection{Next Steps}
-A demonstration of the effectiveness of this probe in the presence of mock injections is warranted (e.g. via responses from a cache that I control).
-In addition, several technical improvements can be made to the probing process:
+Several technical improvements can be made to the probing process:
 \begin{itemize}\addtolength{\itemsep}{-.35\baselineskip}
-	\item Traceroute failures can be handled more gracefully.
+	\item As the probe for a given domain can often run for a long time, it may be advantageous to perform multiple \texttt{traceroute}s throughout the course of a probe to increase temporal proximity in the distance estimates.
 		Additionally, a better estimate for the distance of a domain's servers may be possible, perhaps using the TTL value required to download other files from that domain.
 	\item DNS lookup failures can be handled more gracefully.
 	\item The full-site crawler can be optimized for broad crawls.
@@ -18,3 +17,6 @@ In addition, several technical improvements can be made to the probing process:
 	\item The crawlers can also do a better job at scraping JS URIs.
 		At present, all relative URIs and URIs containing single quotes are ignored.
 \end{itemize}
+
+An obvious extension to these one-off probes would be a persistent probe running in a slow loop so as to avoid detection and wasting network resources.
+By triggering alerts when suspicious files are found, this persistent probe would be in a good position to detect future GC activity.

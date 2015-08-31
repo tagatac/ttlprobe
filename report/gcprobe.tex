@@ -151,6 +151,24 @@ This is accomplished as follows:
 		\item Then a phony JS file containing a reference to a fake URI at \texttt{malice.com} is used to construct a TCP packet in response to the request, and the sequence number from above is used to make it look like the packet is part of the same TCP connection.
 	\end{itemize}
 \end{enumerate}
+Figure~\ref{fig_testnetwork} is a simple diagram of the network layout.
+\begin{figure}
+	\includegraphics[width=\columnwidth]{figures/testnetwork}
+	\captionsetup{singlelinecheck=off}
+	\caption[asdf]{
+		A diagram of the four packets involved in an injection of the file \texttt{http://adnetpub.yaolan.com/js/adpubs.js}.
+		\begin{enumerate}\addtolength{\itemsep}{-.35\baselineskip}\footnotesize{}
+			\item TTLProbe sends a TCP SYN packet to \texttt{http://adnetpub.yaolan.com} via its IP address 117.79.133.119:80 through Router.
+			\item \texttt{adnetpub.yaolan.com} replies with a SYN-ACK packet through Router.
+				Router's \texttt{iptables} are configured such that this packet is inspected before forwarding for the TCP sequence number.
+			\item TTLProbe sends an ACK packet to \texttt{http://adnetpub.yaolan.com} to complete the TCP connection.
+			\item TTLProbe requests the file \texttt{http://adnetpub.yaolan.com/js/adpubs.js} from \texttt{http://adnetpub.yaolan.com} through Router.
+				However, Router does not forward this packet to \texttt{http://adnetpub.yaolan.com}, but drops it instead.
+			\item Finally, Router sends a phony JS file back to TTLProbe.
+		\end{enumerate}
+	}
+	\label{fig_testnetwork}
+\end{figure}
 Requests for the file from \texttt{wget}, \texttt{netcat}, and the TTL probe script developed in this work are all able to receive the phony JS file as if it had come from \texttt{adnetpub.yaolan.com}.
 \subsubsection{Verdict}
 The probe was run on a small subset of the URIs scraped by the homepage-only crawler described in \autoref{homepages-crawler} -- particularly those scripts scraped from one homepage: \texttt{http://www.yaolan.com}.
