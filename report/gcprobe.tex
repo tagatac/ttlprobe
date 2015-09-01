@@ -73,7 +73,8 @@ The regular expression used is \texttt{https?://[URI\_CHARS]*\textbackslash{}.js
 Using the built-in Scrapy pipeline system, these URIs are written, along with the \texttt{referer} URL to a file in JSON format.
 Note that both crawlers may record any given script URI more than once, as the scraping records (referer, URI) pairs.
 
-After setting the system DNS servers to those identified in \autoref{dns}, this crawler ran to completion in 8 minutes and 32 seconds, gathering 3427 JavaScript file URIs from 374 of the 500 homepages.
+After setting the system DNS servers to those identified in \autoref{dns}, this crawler ran to completion in 8 minutes and 32 seconds, gathering 3,427 (referer, JavaScript file URI) pairs from 374 of the 500 homepages.
+Of the 3,427 (referer, URI) pairs, 2,757 correspond to unique URIs.
 The JS files are hosted across 737 domains.
 The crawler encountered 106 Scrapy exceptions, of which 60 were timeout errors, 37 were DNS errors, and 9 were no-response errors.
 3 more errors were caused by a Scrapy bug wherein an exception is raised when TLS certificates fail verification~\cite{Calderone2015}.
@@ -86,7 +87,8 @@ Again, it scrapes each of these pages for JS URIs and hyperlinks to visit, and r
 I have never seen this crawler complete.
 A first run, performed in the default depth-first order, and storing links to visit in memory, gathered 910,490 JS (referer, JS file URI) pairs from 268,537 distinct pages before running out of memory and crashing after 19 hours and 1 minute.
 These files are hosted on 118 different domains.
-The domain which accounted for the largest fraction of the JS URIs was \texttt{cmsjs.eastmoney.com}, hosting 377,156 of the 0.9M (referer, URI) pairs.
+The domain which accounted for the largest fraction of the JS URIs was \texttt{cmsjs.eastmoney.com}, hosting 377,156 of the 0.9M (referer, URI) pairs, of which only 640 of the URIs are unique.
+This large number of repeated URIs is not unexpected because this run scraped in DFO, often recording the same JS file URIs for many similar pages on the same domain.
 This run also used a more basic regular expression for extracting URIs, one which ignores the queries and segments (everything after the first question mark).
 
 A second run, performed in breadth-first order, and storing link to visit on disk, has been running since 1am on August 16\textsuperscript{th}.
