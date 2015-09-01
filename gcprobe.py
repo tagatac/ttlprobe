@@ -63,7 +63,7 @@ def probe_domain(domain, script_list, traceroute_lock, outfile_lock):
 		# the upperbound; when it is not, increase the lowerbound; set
 		# the TTL value in the middle of the range and repeat until the
 		# range has size zero)
-		print(time.strftime('%Y-%m-%d %H:%M:%S') + 'Probing for ' + \
+		print(time.strftime('%Y-%m-%d %H:%M:%S ') + 'Probing for ' + \
 		      script + ', referred by ' + referer)
 		sys.stdout.flush()
 		if distance: upperbound = distance + 3

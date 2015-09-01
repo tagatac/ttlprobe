@@ -16,7 +16,7 @@ figures/histtest.png : ../results/shortroutingtest-20150830T1830/gcprobe.json sc
 figures/histhomepages.png : ../results/homepagefiles-20150831T2236/gcprobe.json scripts/gen_plot.py
 	scripts/gen_plot.py $< $@
 
-figures/histmemfail.png : ../results/memfailfiles-20150818T1418/modified.json scripts/gen_plot.py
+figures/histmemfail.png : ../tmp/gcprobe.json scripts/gen_plot.py
 	scripts/gen_plot.py $< $@
 
 

@@ -3,4 +3,6 @@ This means that the GFW cannot intercept packets, but only influences communicat
 The GC, on the other hand, can and has intercepted packets coming from Baidu's servers and replaced them with their own packets --– specifically to deliver a malicious JavaScript file as if it were from Baidu.
 
 I have repeated a subset of their GFW experiments with similar results, and also shown that the GC is no longer behaving as it was during the DDoS attack on GitHub.
-I have gone on to probe for other GC-like JavaScript file responses originating from some node in the path between Columbia and various domains on the Internet.
+I went on to create a probe for other GC-like JavaScript file responses originating from some IP node in the path between Columbia and various domains on the Internet.
+I tested this probe with an \texttt{iptables}-based file injector that I designed and implemented.
+I then ran the probe on over 18,000 files, discovering no cases where the file was likely sent by a node other than the hosting server.
