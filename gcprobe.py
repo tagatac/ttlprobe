@@ -119,7 +119,7 @@ parser.add_argument('-o', '--outfile', default=RESULTS_FILE, type=str, help='the
 args = parser.parse_args()
 
 # echo the command line arguments for logging purposes
-print(sys.argv)
+print(str(sys.argv) + ' on ' + socket.gethostname())
 
 # make sure the download folder and results file don't exist yet
 if os.path.exists(args.dir):
