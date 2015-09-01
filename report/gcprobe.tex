@@ -159,12 +159,12 @@ Figure~\ref{fig_testnetwork} is a simple diagram of the network layout.
 	\captionsetup{singlelinecheck=off}
 	\caption[asdf]{
 		A diagram of the five packets involved in an injection of the file \texttt{http://adnetpub.yaolan.com/js/adpubs.js}.
-		\begin{enumerate}\addtolength{\itemsep}{-.35\baselineskip}\footnotesize{}
+		\begin{enumerate}\addtolength{\itemsep}{-.35\baselineskip}
 			\item TTLProbe sends a TCP SYN packet to \texttt{http://adnetpub.yaolan.com} via its IP address 117.79.133.119:80 through Router.
 			\item \texttt{adnetpub.yaolan.com} replies with a SYN-ACK packet through Router.
 				Router's \texttt{iptables} are configured such that this packet is inspected before forwarding for the TCP sequence number.
 			\item TTLProbe sends an ACK packet to \texttt{http://adnetpub.yaolan.com} to complete the TCP connection.
-			\item TTLProbe requests the file \texttt{http://adnetpub.yaolan.com/js/adpubs.js} from \texttt{http://adnetpub.yaolan.com} through Router.
+			\item TTLProbe requests the file \texttt{http://adnetpub.yaolan.com\allowbreak{}/js/adpubs.js} from \texttt{http://adnetpub.yaolan.com} through Router.
 				However, Router does not forward this packet to \texttt{http://adnetpub.yaolan.com}, but drops it instead.
 			\item Finally, Router sends a phony JS file back to TTLProbe.
 		\end{enumerate}
