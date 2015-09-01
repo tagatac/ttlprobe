@@ -26,6 +26,7 @@ for entry in jsondata:
 font = {'size':16}
 mpl.rc('font', **font)
 bins = max(x) - min(x) + 1
+plt.locator_params(integer=True)
 histrange = (min(x) - 0.5, max(x) + 0.5)
 plt.hist(x, bins, range=histrange, log=logplot)
 plt.xlabel('Difference Between the traceroute result and\nthe TTL Value Required to Request the File (# of hops)')

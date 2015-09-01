@@ -13,7 +13,7 @@ $(date)TTLProbe.pdf : $(SECTIONS:=.tex) $(addprefix figures/, $(JPGS:=.jpg)) $(a
 figures/histtest.png : ../results/shortroutingtest-20150830T1830/gcprobe.json scripts/gen_plot.py
 	scripts/gen_plot.py $< $@ False
 
-figures/histhomepages.png : ../results/homepagefiles-20150817T2300/modified.json scripts/gen_plot.py
+figures/histhomepages.png : ../results/homepagefiles-20150831T2236/gcprobe.json scripts/gen_plot.py
 	scripts/gen_plot.py $< $@
 
 figures/histmemfail.png : ../results/memfailfiles-20150818T1418/modified.json scripts/gen_plot.py
