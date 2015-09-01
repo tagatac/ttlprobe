@@ -1,6 +1,5 @@
 .DS_Store
 *.pyc
 *.swp
-badprobes/
 *gcprobefiles/
 timeouttestfiles/
