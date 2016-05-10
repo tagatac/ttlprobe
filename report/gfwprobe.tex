@@ -17,7 +17,7 @@ This is effectively requesting \texttt{www.google.com/?test} from a server (not 
 	\label{fig_gfwbaiduip}
 \end{figure}
 
-All of the requests prompted \texttt{Time-to-live exceeded} messages from intermediary nodes on the way to \texttt{123.125.65.120} until the request sent with TTL=24, which finally gets a \texttt{403} HTTP response (Figure \ref{fig_gfwtest}), as expected when requesting a google.com page from any server other than Google’s.
+All of the requests prompted \texttt{Time-to-live exceeded} messages from intermediary nodes on the way to \texttt{123.125.65.120} until the request sent with TTL=24, which finally gets a \texttt{403} HTTP response (Figure \ref{fig_gfwtest}), as expected when requesting a google.com page from any server other than Google's.
 \begin{figure*}
 	\includegraphics[width=\textwidth]{figures/gfwtest}
 	\caption{
@@ -34,7 +34,7 @@ This experiment shows that the GFW is between 17 and 18 hops from my desktop alo
 An identical experiment to Experiment 1 was performed, only substituting \texttt{falun} for \texttt{test} in the HTTP \texttt{GET} requests.
 The results are the same as in \autoref{gfwbaseline} for TTL values 1--17.
 For each TTL$\geq$18, I received an \texttt{[RST]} packet and three \texttt{[RST, ACK]} packets apparently from \texttt{123.125.65.120} (but actually from GFW).
-\texttt{[RST]} packets sent by the GFW to both endpoints (my desktop and the server and \texttt{123.125.65.120}) cause both to close the TCP connection.
+\texttt{[RST]} packets sent by the GFW to both endpoints (my desktop and the server at \texttt{123.125.65.120}) cause both to close the TCP connection.
 The packet capture can be found here: \url{https://github.com/tagatac/ttlprobe/blob/prelim/falun-scripted.pcapng}.
 The script used for both the experiments in \autoref{gfwbaseline} and \autoref{gfwlocation} can be found here: \url{https://github.com/tagatac/ttlprobe/blob/prelim/test.py}.
 Figure \ref{fig_gfwfalun} shows the request with TTL=18 prompting the first \texttt{[RST]} packet from the GFW.
@@ -61,7 +61,7 @@ These probes sent the following requests with the specified encryption, and TTL 
 	\item \texttt{www.google.com/?falun} sent over SSL3
 \end{enumerate}
 Not one of these requests generated an \texttt{[RST]} packet from the GFW.
-The script used to these probes can be found here: \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/probe.py}.
+The script used to perform these probes can be found here: \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/probe.py}.
 It uses the standard Python libraries \texttt{socket} and \texttt{ssl}, wrapping a socket connection with the appropriate (TLS1.2 or SSL3) \texttt{ssl.Context}.
 The packet captures for these probes can be found at the following respective URLs:
 \begin{enumerate}\addtolength{\itemsep}{-.35\baselineskip}
@@ -69,6 +69,6 @@ The packet captures for these probes can be found at the following respective UR
 	\item \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/pcaps/falun-220-tls.pcapng}
 	\item \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/pcaps/falun-220-ssl.pcapng}
 \end{enumerate}
-The certificate offered by the server at texttt{220.181.112.244} can be found here: \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/baiducert.pem}.
+The certificate offered by the server at \texttt{220.181.112.244} can be found here: \url{https://github.com/tagatac/ttlprobe/blob/tlsprobe/baiducert.pem}.
 
 These results support the hypothesis that the GFW does \textit{not} perform keyword filtering on encrypted traffic.

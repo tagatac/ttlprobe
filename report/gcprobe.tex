@@ -113,7 +113,7 @@ For this reason, 3 seconds was the time chosen to stop waiting for a response af
 \subsubsection{Distance to Servers \& Minimum TTL Values}\label{distance-ttl}
 Finally, the most important part of the GC probe is the probe itself.
 The distance to the hosting servers and the minimum TTL values required to obtain JS files from those servers are both determined within the same Python 3 script: \url{https://github.com/tagatac/ttlprobe/blob/master/gcprobe.py}.
-This script first sorts the JS files to be probed by domain, allowing the probes to be parallelized by domain.
+This script first sorts by domain the JS files to be probed, allowing the probes to be parallelized by domain.
 It then spawns a thread pool with up to 512 threads and a results file lock, and allows each thread to probe the list of files hosted by a single domain.
 The probe for each domain involves:
 \begin{itemize}\addtolength{\itemsep}{-.35\baselineskip}
@@ -150,7 +150,7 @@ This is accomplished as follows:
 	\item If \texttt{adpubs.js} is requested, the packet is also queued for inspection with the \texttt{NFQUEUE} target, although using a different queue than in step~\ref{synack}.
 	\item Finally, a Python 2 daemon processes both queues using \texttt{python-netfilterqueue}~\cite{Kerkhoff2015}, Python bindings for the \texttt{libnetfilter\_queue} C library:
 	\begin{itemize}
-		\item The SYN-ACK packets are inspected for their sequence numbers, and then accepted, so that they continue on the TTLProbe, allowing TCP connections to be made.
+		\item The SYN-ACK packets are inspected for their sequence numbers, and then accepted, so that they continue on to TTLProbe, allowing TCP connections to be made.
 		\item The request packets are dropped so that the request never makes it to \texttt{adnetpub.yaolan.com}.
 		\item Then a phony JS file containing a reference to a fake URI at \texttt{malice.com} is used to construct a TCP packet in response to the request, and the sequence number from above is used to make it look like the packet is part of the same TCP connection.
 	\end{itemize}
